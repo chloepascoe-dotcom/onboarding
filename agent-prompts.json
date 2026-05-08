@@ -1,0 +1,129 @@
+{
+  "version": "1.0",
+  "description": "Claude API prompt templates for the Onboarding Agent",
+
+  "prompts": {
+    "scope_and_assignment": {
+      "name": "Determine Scope & Assign Owner",
+      "description": "Analyzes deal data to determine service scope and assign the best owner",
+      "system_prompt": "You are an onboarding coordinator for Single Grain, a digital marketing agency. Your job is to analyze new client deals and make intelligent decisions about scope, complexity, and team assignments.\n\nYou have access to:\n1. Deal data from CRM (client name, services purchased, budget, contacts, kickoff date)\n2. Current team workload data\n3. Team member expertise profiles\n\nYou must output structured JSON with your decisions and reasoning.",
+
+      "user_prompt_template": "A new client has signed. Analyze the deal and make routing decisions.\n\n## Deal Information\n- Client Name: {{client_name}}\n- Services Purchased: {{services}}\n- Monthly Budget: ${{monthly_budget}}\n- Kickoff Date: {{kickoff_date}}\n- Primary Contact: {{primary_contact}}\n- Industry: {{industry}}\n- Website: {{website}}\n- Notes from Sales: {{sales_notes}}\n\n## Current Team Workload\n{{team_workload}}\n\n## Team Expertise Profiles\n{{team_profiles}}\n\n## Your Tasks\n1. Determine which channels/services should be included based on budget and goals\n2. Assess complexity level (low/medium/high) based on scope and client needs\n3. Assign a primary owner based on expertise match and current capacity\n4. Assign a backup owner\n5. Provide clear reasoning for your decisions\n\nRespond with valid JSON matching this schema:\n{\n  \"scope\": {\n    \"services\": [\"paid_media\", \"seo_aeo\", \"creative\"],\n    \"channels_recommended\": [\"google_search\", \"meta\", \"linkedin\"],\n    \"complexity\": \"medium\",\n    \"estimated_hours_per_month\": 40\n  },\n  \"assignment\": {\n    \"primary_owner_id\": \"user_123\",\n    \"primary_owner_name\": \"Sarah Chen\",\n    \"backup_owner_id\": \"user_456\",\n    \"backup_owner_name\": \"Mike Johnson\",\n    \"reasoning\": \"Sarah has deep Meta expertise and capacity. Budget supports multi-channel approach.\"\n  },\n  \"priority_flags\": {\n    \"tight_timeline\": false,\n    \"enterprise_client\": true,\n    \"requires_creative_support\": true\n  }\n}",
+
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "object",
+            "properties": {
+              "services": { "type": "array", "items": { "type": "string" } },
+              "channels_recommended": { "type": "array", "items": { "type": "string" } },
+              "complexity": { "type": "string", "enum": ["low", "medium", "high"] },
+              "estimated_hours_per_month": { "type": "number" }
+            },
+            "required": ["services", "channels_recommended", "complexity"]
+          },
+          "assignment": {
+            "type": "object",
+            "properties": {
+              "primary_owner_id": { "type": "string" },
+              "primary_owner_name": { "type": "string" },
+              "backup_owner_id": { "type": "string" },
+              "backup_owner_name": { "type": "string" },
+              "reasoning": { "type": "string" }
+            },
+            "required": ["primary_owner_id", "primary_owner_name", "reasoning"]
+          },
+          "priority_flags": { "type": "object" }
+        },
+        "required": ["scope", "assignment"]
+      }
+    },
+
+    "generate_onboarding_package": {
+      "name": "Generate Onboarding Package",
+      "description": "Creates customized Gantt chart, access checklist, and task list based on scope",
+      "system_prompt": "You are an onboarding package generator for Single Grain. Given client information and scope decisions, you create customized onboarding materials.\n\nYou have access to service templates that define standard tasks, timelines, and dependencies for each service line (Paid Media, SEO/AEO, Creative).\n\nYour job is to:\n1. Select relevant tasks from templates based on services purchased\n2. Customize task names with client-specific details\n3. Calculate due dates based on kickoff date\n4. Generate the access checklist based on services\n5. Ensure cross-service dependencies are properly sequenced",
+
+      "user_prompt_template": "Generate the onboarding package for this client.\n\n## Client Information\n- Client Name: {{client_name}}\n- Kickoff Date: {{kickoff_date}}\n- Primary Owner: {{primary_owner}}\n\n## Scope (from previous step)\n{{scope_json}}\n\n## Service Templates\n{{service_templates}}\n\n## Generate:\n1. **gantt_tasks**: Array of tasks with week numbers, owners, and dependencies\n2. **access_checklist**: Platforms needing access based on services\n3. **first_week_priorities**: Top 5 tasks for week 1\n4. **key_milestones**: Major checkpoints with dates\n\nRespond with valid JSON matching this schema:\n{\n  \"gantt_tasks\": [\n    {\n      \"id\": \"pm_001\",\n      \"category\": \"Access & Setup\",\n      \"task\": \"Request Google Ads access for Acme Corp\",\n      \"owner\": \"SG\",\n      \"week\": 1,\n      \"due_date\": \"2026-05-16\",\n      \"depends_on\": null,\n      \"is_milestone\": false\n    }\n  ],\n  \"access_checklist\": [\n    {\n      \"platform\": \"Google Ads\",\n      \"access_email\": \"adwords@singlegrain.com\",\n      \"access_type\": \"Admin\",\n      \"service\": \"paid_media\"\n    }\n  ],\n  \"first_week_priorities\": [\n    \"Schedule kickoff call\",\n    \"Request platform access\",\n    \"Begin tracking audit\"\n  ],\n  \"key_milestones\": [\n    {\n      \"name\": \"Strategy Presentation\",\n      \"week\": 3,\n      \"date\": \"2026-06-02\",\n      \"description\": \"Present campaign strategy for approval\"\n    }\n  ]\n}",
+
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "gantt_tasks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "category": { "type": "string" },
+                "task": { "type": "string" },
+                "owner": { "type": "string", "enum": ["SG", "Client", "Both"] },
+                "week": { "type": "integer" },
+                "due_date": { "type": "string", "format": "date" },
+                "depends_on": { "type": ["string", "null"] },
+                "is_milestone": { "type": "boolean" }
+              },
+              "required": ["id", "task", "owner", "week"]
+            }
+          },
+          "access_checklist": { "type": "array" },
+          "first_week_priorities": { "type": "array", "items": { "type": "string" } },
+          "key_milestones": { "type": "array" }
+        },
+        "required": ["gantt_tasks", "access_checklist", "first_week_priorities", "key_milestones"]
+      }
+    },
+
+    "generate_slack_notification": {
+      "name": "Generate Slack Notification",
+      "description": "Creates formatted Slack Block Kit message for team notification",
+      "system_prompt": "You generate Slack Block Kit JSON for team notifications about new client onboardings. Messages should be clear, actionable, and include all relevant links.",
+
+      "user_prompt_template": "Generate a Slack notification for the team about this new client.\n\n## Client Details\n- Client Name: {{client_name}}\n- Services: {{services}}\n- Monthly Budget: ${{monthly_budget}}\n- Kickoff Date: {{kickoff_date}}\n- Primary Owner: {{primary_owner}}\n\n## Generated Links\n- Asana Project: {{asana_url}}\n- Google Sheet: {{sheet_url}}\n\n## First Week Priorities\n{{first_week_priorities}}\n\nGenerate Slack Block Kit JSON for:\n1. Team channel announcement (celebratory, informative)\n2. DM to primary owner (actionable, with next steps)",
+
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "channel_message": {
+            "type": "object",
+            "properties": {
+              "blocks": { "type": "array" }
+            }
+          },
+          "dm_message": {
+            "type": "object",
+            "properties": {
+              "blocks": { "type": "array" }
+            }
+          }
+        },
+        "required": ["channel_message", "dm_message"]
+      }
+    }
+  },
+
+  "access_checklist_templates": {
+    "paid_media": [
+      { "platform": "Google Ads", "access_email": "adwords@singlegrain.com", "access_type": "Admin" },
+      { "platform": "Meta Business Manager", "access_email": "meta@singlegrain.com", "access_type": "Admin" },
+      { "platform": "LinkedIn Campaign Manager", "access_email": "linkedin@singlegrain.com", "access_type": "Account Manager" },
+      { "platform": "Google Analytics 4", "access_email": "analytics@singlegrain.com", "access_type": "Editor" },
+      { "platform": "Google Tag Manager", "access_email": "gtm@singlegrain.com", "access_type": "Publish" },
+      { "platform": "Microsoft Ads", "access_email": "bing@singlegrain.com", "access_type": "Super Admin" }
+    ],
+    "seo_aeo": [
+      { "platform": "Google Search Console", "access_email": "seo@singlegrain.com", "access_type": "Full" },
+      { "platform": "Google Analytics 4", "access_email": "analytics@singlegrain.com", "access_type": "Editor" },
+      { "platform": "CMS Admin", "access_email": "dev@singlegrain.com", "access_type": "Editor" },
+      { "platform": "Ahrefs (add site)", "access_email": "seo@singlegrain.com", "access_type": "Project" },
+      { "platform": "Bing Webmaster Tools", "access_email": "seo@singlegrain.com", "access_type": "Admin" }
+    ],
+    "creative": [
+      { "platform": "Brand Assets Folder", "access_email": "creative@singlegrain.com", "access_type": "View/Download" },
+      { "platform": "Figma/Design Files", "access_email": "creative@singlegrain.com", "access_type": "Viewer" },
+      { "platform": "Meta Ad Library", "access_email": "N/A", "access_type": "Public (for research)" },
+      { "platform": "Client Website CMS", "access_email": "creative@singlegrain.com", "access_type": "Editor (if landing pages)" }
+    ]
+  }
+}

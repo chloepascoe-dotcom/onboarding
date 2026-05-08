@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding Agent - Workflow Overview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 40px;
+      color: #fff;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 50px; }
+    h1 { font-size: 2.5rem; font-weight: 300; margin-bottom: 10px; }
+    h1 span { color: #4ade80; font-weight: 600; }
+    .subtitle { color: #94a3b8; font-size: 1.1rem; }
+
+    .flow-section { margin-bottom: 40px; }
+    .section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #4ade80;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, #4ade80 0%, transparent 100%);
+    }
+
+    .flow-row {
+      display: flex;
+      gap: 20px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+
+    .flow-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 24px;
+      flex: 1;
+      position: relative;
+    }
+    .flow-card.trigger {
+      background: linear-gradient(135deg, rgba(74,222,128,0.15) 0%, rgba(74,222,128,0.05) 100%);
+      border-color: rgba(74,222,128,0.3);
+    }
+    .flow-card.agent {
+      background: linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.05) 100%);
+      border-color: rgba(139,92,246,0.3);
+    }
+    .flow-card.output {
+      background: linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.05) 100%);
+      border-color: rgba(59,130,246,0.3);
+    }
+    .flow-card.learn {
+      background: linear-gradient(135deg, rgba(251,146,60,0.15) 0%, rgba(251,146,60,0.05) 100%);
+      border-color: rgba(251,146,60,0.3);
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+    }
+    .trigger .card-icon { background: rgba(74,222,128,0.2); }
+    .agent .card-icon { background: rgba(139,92,246,0.2); }
+    .output .card-icon { background: rgba(59,130,246,0.2); }
+    .learn .card-icon { background: rgba(251,146,60,0.2); }
+
+    .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+    .card-desc { color: #94a3b8; font-size: 0.9rem; line-height: 1.5; }
+
+    .arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4ade80;
+      font-size: 1.5rem;
+      min-width: 40px;
+    }
+
+    .outputs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .output-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .output-item .icon { font-size: 1.5rem; margin-bottom: 8px; }
+    .output-item .label { font-size: 0.85rem; color: #94a3b8; }
+
+    .closed-loop {
+      background: rgba(251,146,60,0.1);
+      border: 2px dashed rgba(251,146,60,0.3);
+      border-radius: 20px;
+      padding: 30px;
+      margin-top: 40px;
+      text-align: center;
+    }
+    .closed-loop h3 { color: #fb923c; margin-bottom: 15px; font-size: 1.3rem; }
+    .closed-loop p { color: #94a3b8; max-width: 600px; margin: 0 auto; }
+
+    .tech-stack {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 40px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .tech-item {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.8rem;
+    }
+    .tech-item span { display: block; font-size: 1.5rem; margin-bottom: 5px; }
+
+    .endpoint-badge {
+      display: inline-block;
+      background: rgba(0,0,0,0.3);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #4ade80;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Onboarding <span>Agent</span> Workflow</h1>
+      <p class="subtitle">Closed-loop automation from deal close to continuous learning</p>
+    </header>
+
+    <div class="flow-section">
+      <div class="section-title">Stage 1: Deal Trigger</div>
+      <div class="flow-row">
+        <div class="flow-card trigger">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">HubSpot Deal Closes</div>
+          <div class="card-desc">When a deal moves to "Closed Won", HubSpot workflow fires a webhook with deal data (client name, budget, industry, owner).</div>
+          <div class="endpoint-badge">POST /api/hubspot-webhook</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="flow-card agent">
+          <div class="card-icon">🤖</div>
+          <div class="card-title">Onboarding Agent</div>
+          <div class="card-desc">Agent processes deal data and auto-generates structured onboarding materials in Google Sheets.</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="flow-card output">
+          <div class="card-icon">📊</div>
+          <div class="card-title">3 Tabs Created</div>
+          <div class="card-desc">
+            <strong>Gantt Chart</strong> - 12-week timeline<br>
+            <strong>Access Checklist</strong> - Platform tracking<br>
+            <strong>Kickoff Questions</strong> - Custom Q&A
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-section">
+      <div class="section-title">Stage 2: Research Automation</div>
+      <div class="flow-row">
+        <div class="flow-card trigger">
+          <div class="card-icon">✅</div>
+          <div class="card-title">Access Confirmed</div>
+          <div class="card-desc">When all platform access is granted and confirmed in the Access tab, the system triggers the next phase.</div>
+          <div class="endpoint-badge">POST /api/confirm-access</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="flow-card agent">
+          <div class="card-icon">🔬</div>
+          <div class="card-title">Research Agent</div>
+          <div class="card-desc">Agent generates high-level first considerations and initial strategic framework. Detailed research to follow.</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="flow-card output">
+          <div class="card-icon">📈</div>
+          <div class="card-title">Research Tab Created</div>
+          <div class="card-desc">
+            Initial competitor landscape<br>
+            Priority keyword themes<br>
+            Recommended campaign structure<br>
+            Tracking checklist
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-section">
+      <div class="section-title">Outputs</div>
+      <div class="outputs-grid">
+        <div class="output-item">
+          <div class="icon">📋</div>
+          <div class="label">Google Sheets<br><strong>Onboarding Tabs</strong></div>
+        </div>
+        <div class="output-item">
+          <div class="icon">💬</div>
+          <div class="label">Slack Notifications<br><strong>Team Alerts</strong></div>
+        </div>
+        <div class="output-item">
+          <div class="icon">🔗</div>
+          <div class="label">HubSpot Sync<br><strong>Deal Integration</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="time-saved" style="background: linear-gradient(135deg, rgba(74,222,128,0.1) 0%, rgba(74,222,128,0.02) 100%); border: 1px solid rgba(74,222,128,0.2); border-radius: 20px; padding: 30px; margin-top: 40px; margin-bottom: 40px;">
+      <h3 style="color: #4ade80; margin-bottom: 20px; font-size: 1.3rem; text-align: center;">⏱️ Time Saved Per Client</h3>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; text-align: center;">
+        <div>
+          <div style="font-size: 2rem; font-weight: 700; color: #4ade80;">4-5 hrs</div>
+          <div style="color: #94a3b8; font-size: 0.85rem;">Custom Gantt chart<br><span style="color: #64748b; font-size: 0.75rem;">Timeline, tasks, owners, formatting</span></div>
+        </div>
+        <div>
+          <div style="font-size: 2rem; font-weight: 700; color: #4ade80;">2-3 hrs</div>
+          <div style="color: #94a3b8; font-size: 0.85rem;">Kickoff prep & research<br><span style="color: #64748b; font-size: 0.75rem;">Questions, competitor scan, keywords</span></div>
+        </div>
+        <div>
+          <div style="font-size: 2rem; font-weight: 700; color: #4ade80;">1-2 hrs</div>
+          <div style="color: #94a3b8; font-size: 0.85rem;">Access tracking setup<br><span style="color: #64748b; font-size: 0.75rem;">Platform list, status tracking, follow-ups</span></div>
+        </div>
+        <div style="background: rgba(74,222,128,0.15); border-radius: 12px; padding: 15px;">
+          <div style="font-size: 2rem; font-weight: 700; color: #fff;">8-10 hrs</div>
+          <div style="color: #4ade80; font-size: 0.85rem; font-weight: 600;">Total saved per client</div>
+        </div>
+      </div>
+      <p style="text-align: center; color: #64748b; font-size: 0.85rem; margin-top: 20px;">From deal close → ready for kickoff call in <strong style="color: #4ade80;">minutes</strong> instead of <strong style="color: #94a3b8;">1-2 days</strong></p>
+    </div>
+
+    <div class="closed-loop">
+      <h3>🔄 Closed Loop: Agent Learnings</h3>
+      <p>After each onboarding, the Research Agent captures patterns and insights in the <strong>Agent Learnings</strong> tab. These learnings compound over time, making each subsequent onboarding smarter.</p>
+      <div style="margin-top: 20px; display: flex; justify-content: center; gap: 40px; color: #94a3b8; font-size: 0.9rem;">
+        <span>📥 Input</span>
+        <span>→</span>
+        <span>⚙️ Execute</span>
+        <span>→</span>
+        <span>📤 Output</span>
+        <span>→</span>
+        <span>📏 Measure</span>
+        <span>→</span>
+        <span style="color: #fb923c; font-weight: 600;">🧠 Learn</span>
+      </div>
+    </div>
+
+    <div class="tech-stack">
+      <div class="tech-item"><span>⚡</span>Vercel</div>
+      <div class="tech-item"><span>📊</span>Google Sheets API</div>
+      <div class="tech-item"><span>🔶</span>HubSpot Webhooks</div>
+      <div class="tech-item"><span>💬</span>Slack API</div>
+      <div class="tech-item"><span>🟢</span>Node.js</div>
+    </div>
+  </div>
+</body>
+</html>

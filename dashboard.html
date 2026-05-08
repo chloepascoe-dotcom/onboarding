@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding Agent - Sales Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      color: #fff;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .header p {
+      color: #8892b0;
+      font-size: 1.1rem;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 24px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e1e5eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #4f46e5;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .service-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border: 2px solid #e1e5eb;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .service-checkbox:hover {
+      border-color: #4f46e5;
+    }
+    .service-checkbox input {
+      width: auto;
+    }
+    .service-checkbox.checked {
+      border-color: #4f46e5;
+      background: #f0f0ff;
+    }
+    .btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(79, 70, 229, 0.4);
+    }
+    .btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-green {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .btn-green:hover {
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+    }
+    .result {
+      margin-top: 30px;
+      padding: 24px;
+      border-radius: 12px;
+      display: none;
+    }
+    .result.success {
+      display: block;
+      background: #ecfdf5;
+      border: 2px solid #10b981;
+    }
+    .result.error {
+      display: block;
+      background: #fef2f2;
+      border: 2px solid #ef4444;
+    }
+    .result h3 {
+      margin-bottom: 12px;
+      color: #065f46;
+    }
+    .result.error h3 {
+      color: #991b1b;
+    }
+    .result a {
+      color: #4f46e5;
+      font-weight: 600;
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Pipeline Styles */
+    .pipeline {
+      display: none;
+      margin-top: 30px;
+    }
+    .pipeline.active {
+      display: block;
+    }
+    .pipeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .pipeline-header h2 {
+      color: #333;
+      font-size: 1.4rem;
+    }
+    .pipeline-client {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .pipeline-steps {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-bottom: 30px;
+    }
+    .pipeline-steps::before {
+      content: '';
+      position: absolute;
+      top: 24px;
+      left: 60px;
+      right: 60px;
+      height: 4px;
+      background: #e1e5eb;
+      z-index: 0;
+    }
+    .pipeline-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1;
+      flex: 1;
+    }
+    .step-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #e1e5eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      transition: all 0.3s;
+    }
+    .step-icon.active {
+      background: #fbbf24;
+      animation: pulse 1.5s infinite;
+    }
+    .step-icon.complete {
+      background: #10b981;
+    }
+    .step-label {
+      font-size: 0.85rem;
+      color: #666;
+      text-align: center;
+      font-weight: 500;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.5); }
+      50% { transform: scale(1.05); box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.3); }
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .action-btn {
+      padding: 14px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid;
+      font-size: 0.95rem;
+    }
+    .action-btn.primary {
+      background: #4f46e5;
+      border-color: #4f46e5;
+      color: #fff;
+    }
+    .action-btn.primary:hover {
+      background: #4338ca;
+    }
+    .action-btn.secondary {
+      background: #fff;
+      border-color: #e1e5eb;
+      color: #333;
+    }
+    .action-btn.secondary:hover {
+      border-color: #4f46e5;
+      color: #4f46e5;
+    }
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .activity-log {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .activity-log h4 {
+      margin-bottom: 12px;
+      color: #333;
+      font-size: 0.9rem;
+    }
+    .log-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e1e5eb;
+      font-size: 0.9rem;
+    }
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    .log-time {
+      color: #9ca3af;
+      font-size: 0.8rem;
+      min-width: 60px;
+    }
+    .log-icon {
+      font-size: 1rem;
+    }
+    .log-message {
+      color: #333;
+    }
+
+    .links-section {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .link-card {
+      background: #f8fafc;
+      border: 2px solid #e1e5eb;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      text-decoration: none;
+      color: #333;
+      transition: all 0.2s;
+    }
+    .link-card:hover {
+      border-color: #4f46e5;
+      background: #f0f0ff;
+    }
+    .link-card .icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    .link-card .label {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Onboarding Agent</h1>
+      <p>Agentic workflow: Sales input triggers automated onboarding & research</p>
+    </div>
+
+    <div class="card">
+      <!-- Manual Form -->
+      <form id="onboardingForm">
+        <div class="row">
+          <div class="form-group">
+            <label>Client Name *</label>
+            <input type="text" id="clientName" required placeholder="e.g., Acme Corporation">
+          </div>
+          <div class="form-group">
+            <label>Industry</label>
+            <input type="text" id="industry" placeholder="e.g., B2B SaaS">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="form-group">
+            <label>Monthly Budget *</label>
+            <input type="number" id="budget" required placeholder="e.g., 50000">
+          </div>
+          <div class="form-group">
+            <label>Kickoff Date *</label>
+            <input type="date" id="kickoffDate" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Services *</label>
+          <div class="services-grid">
+            <label class="service-checkbox">
+              <input type="checkbox" name="services" value="paid_media" checked>
+              <span>Paid Media</span>
+            </label>
+            <label class="service-checkbox">
+              <input type="checkbox" name="services" value="seo_aeo">
+              <span>SEO / AEO</span>
+            </label>
+            <label class="service-checkbox">
+              <input type="checkbox" name="services" value="creative">
+              <span>Creative</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="form-group">
+            <label>Assigned Owner</label>
+            <select id="assignedOwner">
+              <option value="Chloe Pascoe">Chloe Pascoe</option>
+              <option value="Alex Kim">Alex Kim</option>
+              <option value="Jordan Reyes">Jordan Reyes</option>
+              <option value="Sam Patel">Sam Patel</option>
+              <option value="Morgan Liu">Morgan Liu</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Primary Contact Email</label>
+            <input type="email" id="contactEmail" placeholder="e.g., sarah@company.com">
+          </div>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">
+          Create Onboarding
+        </button>
+      </form>
+
+      <!-- Pipeline View (shows after creation) -->
+      <div class="pipeline" id="pipeline">
+        <div class="pipeline-header">
+          <h2>Onboarding Pipeline</h2>
+          <span class="pipeline-client" id="pipelineClient">Client Name</span>
+        </div>
+
+        <div class="pipeline-steps">
+          <div class="pipeline-step">
+            <div class="step-icon complete" id="step1">1</div>
+            <span class="step-label">Onboarding<br>Created</span>
+          </div>
+          <div class="pipeline-step">
+            <div class="step-icon" id="step2">2</div>
+            <span class="step-label">Access<br>Requested</span>
+          </div>
+          <div class="pipeline-step">
+            <div class="step-icon" id="step3">3</div>
+            <span class="step-label">Access<br>Confirmed</span>
+          </div>
+          <div class="pipeline-step">
+            <div class="step-icon" id="step4">4</div>
+            <span class="step-label">Research<br>Agent</span>
+          </div>
+          <div class="pipeline-step">
+            <div class="step-icon" id="step5">5</div>
+            <span class="step-label">Ready to<br>Launch</span>
+          </div>
+        </div>
+
+        <div class="links-section" id="linksSection">
+          <a href="#" class="link-card" id="ganttLink" target="_blank">
+            <div class="icon">📊</div>
+            <div class="label">Gantt Chart</div>
+          </a>
+          <a href="#" class="link-card" id="accessLink" target="_blank">
+            <div class="icon">🔐</div>
+            <div class="label">Access Checklist</div>
+          </a>
+          <a href="#" class="link-card" id="researchLink" target="_blank" style="opacity: 0.4; pointer-events: none;">
+            <div class="icon">🤖</div>
+            <div class="label">Research Report</div>
+          </a>
+        </div>
+
+        <div class="action-buttons">
+          <button class="action-btn primary" id="confirmAccessBtn">
+            Simulate: Client Confirms Access
+          </button>
+          <button class="action-btn secondary" id="newClientBtn">
+            + New Client
+          </button>
+        </div>
+
+        <div class="activity-log" id="activityLog">
+          <h4>Activity Log</h4>
+          <div id="logEntries"></div>
+        </div>
+      </div>
+
+      <div class="result" id="result"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentClient = null;
+    let spreadsheetUrl = null;
+
+    // Set default date to next Monday
+    const today = new Date();
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + ((1 + 7 - today.getDay()) % 7 || 7));
+    document.getElementById('kickoffDate').value = nextMonday.toISOString().split('T')[0];
+
+    // Service checkbox styling
+    document.querySelectorAll('.service-checkbox input').forEach(cb => {
+      cb.addEventListener('change', function() {
+        this.closest('.service-checkbox').classList.toggle('checked', this.checked);
+      });
+      if (cb.checked) cb.closest('.service-checkbox').classList.add('checked');
+    });
+
+    function addLog(icon, message) {
+      const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `
+        <span class="log-time">${time}</span>
+        <span class="log-icon">${icon}</span>
+        <span class="log-message">${message}</span>
+      `;
+      document.getElementById('logEntries').prepend(entry);
+    }
+
+    function updateStep(stepNum, status) {
+      const step = document.getElementById(`step${stepNum}`);
+      step.classList.remove('active', 'complete');
+      if (status === 'active') step.classList.add('active');
+      if (status === 'complete') step.classList.add('complete');
+    }
+
+    // Form submission
+    document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const btn = document.getElementById('submitBtn');
+      const result = document.getElementById('result');
+      const pipeline = document.getElementById('pipeline');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Creating...';
+      result.style.display = 'none';
+
+      const formData = {
+        client_name: document.getElementById('clientName').value,
+        industry: document.getElementById('industry').value,
+        monthly_budget: parseInt(document.getElementById('budget').value),
+        kickoff_date: document.getElementById('kickoffDate').value,
+        services: Array.from(document.querySelectorAll('input[name="services"]:checked')).map(cb => cb.value),
+        assigned_owner: document.getElementById('assignedOwner').value,
+        contact_email: document.getElementById('contactEmail').value
+      };
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          currentClient = formData.client_name;
+          spreadsheetUrl = data.spreadsheet_url;
+
+          // Update pipeline UI
+          document.getElementById('pipelineClient').textContent = currentClient;
+          document.getElementById('ganttLink').href = spreadsheetUrl;
+          document.getElementById('accessLink').href = spreadsheetUrl.replace(/#.*/, '') + '#gid=0';
+          pipeline.classList.add('active');
+
+          // Reset steps
+          updateStep(1, 'complete');
+          updateStep(2, 'active');
+          updateStep(3, '');
+          updateStep(4, '');
+          updateStep(5, '');
+
+          // Clear and add logs
+          document.getElementById('logEntries').innerHTML = '';
+          addLog('🚀', `Onboarding created for ${currentClient}`);
+          addLog('📄', 'Gantt chart populated with 12-week timeline');
+          addLog('🔐', '22 platform access requests generated');
+          addLog('📨', 'Slack notification sent to team');
+
+          // Hide form, show pipeline
+          document.getElementById('onboardingForm').style.display = 'none';
+
+          // Enable research link styling
+          document.getElementById('researchLink').style.opacity = '0.4';
+          document.getElementById('researchLink').style.pointerEvents = 'none';
+
+        } else {
+          throw new Error(data.error || 'Unknown error');
+        }
+      } catch (err) {
+        result.className = 'result error';
+        result.style.display = 'block';
+        result.innerHTML = `<h3>Error</h3><p>${err.message}</p>`;
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = 'Create Onboarding';
+    });
+
+    // Confirm Access button
+    document.getElementById('confirmAccessBtn').addEventListener('click', async () => {
+      if (!currentClient) return;
+
+      const btn = document.getElementById('confirmAccessBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Processing...';
+
+      updateStep(2, 'complete');
+      updateStep(3, 'active');
+      addLog('⏳', 'Client confirming platform access...');
+
+      try {
+        const response = await fetch('/api/confirm-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_name: currentClient })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          updateStep(3, 'complete');
+          updateStep(4, 'active');
+          addLog('✅', 'All 22 platform access confirmed');
+          addLog('🤖', 'Research Agent triggered automatically');
+
+          // Simulate research progress
+          setTimeout(() => {
+            addLog('🔍', 'Analyzing competitor ad libraries...');
+          }, 500);
+          setTimeout(() => {
+            addLog('📈', 'Identifying keyword opportunities...');
+          }, 1000);
+          setTimeout(() => {
+            addLog('🎯', 'Building campaign recommendations...');
+          }, 1500);
+          setTimeout(() => {
+            addLog('⚙️', 'Auditing tracking setup...');
+          }, 2000);
+          setTimeout(() => {
+            updateStep(4, 'complete');
+            updateStep(5, 'complete');
+            addLog('✅', 'Research Agent complete!');
+            addLog('📨', 'Slack notification sent: Research ready');
+
+            // Enable research link
+            const researchLink = document.getElementById('researchLink');
+            researchLink.style.opacity = '1';
+            researchLink.style.pointerEvents = 'auto';
+            researchLink.href = spreadsheetUrl.replace(/#.*/, '');
+
+            btn.innerHTML = '✅ Complete - View Research Report';
+            btn.classList.remove('primary');
+            btn.classList.add('secondary');
+          }, 2500);
+        }
+      } catch (err) {
+        addLog('❌', 'Error: ' + err.message);
+        btn.disabled = false;
+        btn.innerHTML = 'Retry: Confirm Access';
+      }
+    });
+
+    // New Client button
+    document.getElementById('newClientBtn').addEventListener('click', () => {
+      currentClient = null;
+      spreadsheetUrl = null;
+      document.getElementById('pipeline').classList.remove('active');
+      document.getElementById('onboardingForm').style.display = 'block';
+      document.getElementById('onboardingForm').reset();
+      document.getElementById('kickoffDate').value = nextMonday.toISOString().split('T')[0];
+      document.getElementById('confirmAccessBtn').disabled = false;
+      document.getElementById('confirmAccessBtn').innerHTML = 'Simulate: Client Confirms Access';
+      document.getElementById('confirmAccessBtn').classList.add('primary');
+      document.getElementById('confirmAccessBtn').classList.remove('secondary');
+
+      // Reset checkboxes
+      document.querySelectorAll('.service-checkbox').forEach(cb => cb.classList.remove('checked'));
+      document.querySelector('.service-checkbox input[value="paid_media"]').checked = true;
+      document.querySelector('.service-checkbox input[value="paid_media"]').closest('.service-checkbox').classList.add('checked');
+    });
+  </script>
+</body>
+</html>

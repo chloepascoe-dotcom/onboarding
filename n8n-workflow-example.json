@@ -1,0 +1,295 @@
+{
+  "name": "Onboarding Agent - Deal Closed Workflow",
+  "nodes": [
+    {
+      "id": "webhook_trigger",
+      "name": "CRM Webhook - Deal Closed",
+      "type": "n8n-nodes-base.webhook",
+      "position": [250, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deal-closed",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      },
+      "notes": "Receives webhook from HubSpot/Salesforce when deal moves to closed-won"
+    },
+    {
+      "id": "parse_deal",
+      "name": "Parse Deal Data",
+      "type": "n8n-nodes-base.set",
+      "position": [450, 300],
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "client_name", "value": "={{ $json.deal.client_name }}" },
+            { "name": "services", "value": "={{ $json.deal.services.join(', ') }}" },
+            { "name": "monthly_budget", "value": "={{ $json.deal.monthly_budget }}" },
+            { "name": "kickoff_date", "value": "={{ $json.deal.kickoff_date }}" },
+            { "name": "primary_contact", "value": "={{ $json.deal.contacts[0].email }}" },
+            { "name": "industry", "value": "={{ $json.deal.industry }}" },
+            { "name": "website", "value": "={{ $json.deal.website }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "get_team_workload",
+      "name": "Get Team Workload",
+      "type": "n8n-nodes-base.asana",
+      "position": [450, 450],
+      "parameters": {
+        "operation": "getAll",
+        "resource": "task",
+        "filters": {
+          "assignee": "team_members",
+          "completed_since": "now"
+        }
+      },
+      "notes": "Fetch current task assignments to calculate workload"
+    },
+    {
+      "id": "claude_scope_assignment",
+      "name": "Claude: Determine Scope & Assign Owner",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "position": [700, 300],
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "messageType": "definedBelow",
+          "message": "={{ $node['Parse Deal Data'].json.scope_assignment_prompt }}"
+        },
+        "options": {
+          "maxTokens": 2000,
+          "temperature": 0.3
+        }
+      },
+      "notes": "AI determines service scope, complexity, and assigns owner based on expertise + capacity"
+    },
+    {
+      "id": "parse_scope_response",
+      "name": "Parse Claude Response",
+      "type": "n8n-nodes-base.code",
+      "position": [900, 300],
+      "parameters": {
+        "jsCode": "const response = JSON.parse($input.first().json.message.content);\nreturn [{ json: response }];"
+      }
+    },
+    {
+      "id": "claude_generate_package",
+      "name": "Claude: Generate Onboarding Package",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "position": [1100, 300],
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "messageType": "definedBelow",
+          "message": "={{ $node['Build Package Prompt'].json.package_prompt }}"
+        },
+        "options": {
+          "maxTokens": 4000,
+          "temperature": 0.2
+        }
+      },
+      "notes": "AI generates customized Gantt tasks, access checklist, and priorities"
+    },
+    {
+      "id": "create_google_sheet",
+      "name": "Create Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [1300, 200],
+      "parameters": {
+        "operation": "create",
+        "title": "={{ $node['Parse Deal Data'].json.client_name }} - 90 Day Onboarding",
+        "sheets": [
+          { "title": "Instructions" },
+          { "title": "Access Checklist" },
+          { "title": "Gantt Chart" },
+          { "title": "Key Milestones" }
+        ]
+      }
+    },
+    {
+      "id": "populate_gantt_sheet",
+      "name": "Populate Gantt Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [1500, 200],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "sheetName": "Gantt Chart",
+        "dataMode": "autoMapInputData"
+      }
+    },
+    {
+      "id": "create_asana_project",
+      "name": "Create Asana Project",
+      "type": "n8n-nodes-base.asana",
+      "position": [1300, 400],
+      "parameters": {
+        "operation": "create",
+        "resource": "project",
+        "name": "={{ $node['Parse Deal Data'].json.client_name }} - Onboarding",
+        "workspaceId": "={{ $env.ASANA_WORKSPACE_ID }}",
+        "teamId": "={{ $env.ASANA_TEAM_ID }}"
+      }
+    },
+    {
+      "id": "create_asana_tasks",
+      "name": "Create Asana Tasks (Loop)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [1500, 400],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "notes": "Loop through gantt_tasks array to create individual Asana tasks"
+    },
+    {
+      "id": "asana_task_create",
+      "name": "Create Single Asana Task",
+      "type": "n8n-nodes-base.asana",
+      "position": [1700, 400],
+      "parameters": {
+        "operation": "create",
+        "resource": "task",
+        "name": "={{ $json.task }}",
+        "projectIds": ["={{ $node['Create Asana Project'].json.gid }}"],
+        "assignee": "={{ $json.owner === 'SG' ? $node['Parse Scope Response'].json.assignment.primary_owner_id : null }}",
+        "dueOn": "={{ $json.due_date }}",
+        "notes": "Category: {{ $json.category }}"
+      }
+    },
+    {
+      "id": "slack_channel_notify",
+      "name": "Slack: Team Channel Notification",
+      "type": "n8n-nodes-base.slack",
+      "position": [1700, 200],
+      "parameters": {
+        "operation": "postMessage",
+        "channel": "={{ $env.SLACK_CHANNEL_ID }}",
+        "blocksUi": {
+          "blocksValues": [
+            {
+              "type": "header",
+              "text": {
+                "type": "plain_text",
+                "text": "New Client: {{ $node['Parse Deal Data'].json.client_name }}"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Owner:* <@{{ $node['Parse Scope Response'].json.assignment.primary_owner_id }}>\n*Services:* {{ $node['Parse Deal Data'].json.services }}\n*Budget:* ${{ $node['Parse Deal Data'].json.monthly_budget }}/mo\n*Kickoff:* {{ $node['Parse Deal Data'].json.kickoff_date }}"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Links:*\n<{{ $node['Create Google Sheet'].json.spreadsheetUrl }}|Google Sheet> | <{{ $node['Create Asana Project'].json.permalink_url }}|Asana Project>"
+              }
+            },
+            {
+              "type": "context",
+              "elements": [
+                {
+                  "type": "mrkdwn",
+                  "text": "Routing: {{ $node['Parse Scope Response'].json.assignment.reasoning }}"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "slack_dm_owner",
+      "name": "Slack: DM Primary Owner",
+      "type": "n8n-nodes-base.slack",
+      "position": [1900, 200],
+      "parameters": {
+        "operation": "postMessage",
+        "channel": "={{ $node['Parse Scope Response'].json.assignment.primary_owner_id }}",
+        "blocksUi": {
+          "blocksValues": [
+            {
+              "type": "header",
+              "text": {
+                "type": "plain_text",
+                "text": "You've been assigned: {{ $node['Parse Deal Data'].json.client_name }}"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*First Week Priorities:*\n1. {{ $node['Parse Package Response'].json.first_week_priorities[0] }}\n2. {{ $node['Parse Package Response'].json.first_week_priorities[1] }}\n3. {{ $node['Parse Package Response'].json.first_week_priorities[2] }}"
+              }
+            },
+            {
+              "type": "actions",
+              "elements": [
+                {
+                  "type": "button",
+                  "text": { "type": "plain_text", "text": "Open Asana Project" },
+                  "url": "={{ $node['Create Asana Project'].json.permalink_url }}"
+                },
+                {
+                  "type": "button",
+                  "text": { "type": "plain_text", "text": "View Onboarding Sheet" },
+                  "url": "={{ $node['Create Google Sheet'].json.spreadsheetUrl }}"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log_to_metrics",
+      "name": "Log to Metrics DB",
+      "type": "n8n-nodes-base.airtable",
+      "position": [2100, 300],
+      "parameters": {
+        "operation": "create",
+        "baseId": "={{ $env.AIRTABLE_BASE_ID }}",
+        "tableId": "Onboarding Metrics",
+        "fields": {
+          "Client Name": "={{ $node['Parse Deal Data'].json.client_name }}",
+          "Services": "={{ $node['Parse Deal Data'].json.services }}",
+          "Monthly Budget": "={{ $node['Parse Deal Data'].json.monthly_budget }}",
+          "Primary Owner": "={{ $node['Parse Scope Response'].json.assignment.primary_owner_name }}",
+          "Kickoff Date": "={{ $node['Parse Deal Data'].json.kickoff_date }}",
+          "Complexity": "={{ $node['Parse Scope Response'].json.scope.complexity }}",
+          "Asana Project ID": "={{ $node['Create Asana Project'].json.gid }}",
+          "Created At": "={{ new Date().toISOString() }}",
+          "Status": "Onboarding Started"
+        }
+      },
+      "notes": "Track onboarding for feedback loop - completion rates, timeline, etc."
+    }
+  ],
+  "connections": {
+    "webhook_trigger": { "main": [[{ "node": "parse_deal" }, { "node": "get_team_workload" }]] },
+    "parse_deal": { "main": [[{ "node": "claude_scope_assignment" }]] },
+    "get_team_workload": { "main": [[{ "node": "claude_scope_assignment" }]] },
+    "claude_scope_assignment": { "main": [[{ "node": "parse_scope_response" }]] },
+    "parse_scope_response": { "main": [[{ "node": "claude_generate_package" }]] },
+    "claude_generate_package": { "main": [[{ "node": "create_google_sheet" }, { "node": "create_asana_project" }]] },
+    "create_google_sheet": { "main": [[{ "node": "populate_gantt_sheet" }]] },
+    "populate_gantt_sheet": { "main": [[{ "node": "slack_channel_notify" }]] },
+    "create_asana_project": { "main": [[{ "node": "create_asana_tasks" }]] },
+    "create_asana_tasks": { "main": [[{ "node": "asana_task_create" }]] },
+    "asana_task_create": { "main": [[{ "node": "create_asana_tasks" }]] },
+    "slack_channel_notify": { "main": [[{ "node": "slack_dm_owner" }]] },
+    "slack_dm_owner": { "main": [[{ "node": "log_to_metrics" }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["onboarding", "automation", "paid-media"],
+  "pinData": {},
+  "versionId": "1.0.0"
+}

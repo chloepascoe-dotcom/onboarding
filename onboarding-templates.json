@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0",
+  "description": "Onboarding Gantt templates for the autonomous onboarding agent",
+  "services": {
+    "paid_media": {
+      "name": "Paid Media",
+      "duration_weeks": 12,
+      "categories": [
+        {
+          "name": "Access & Setup",
+          "tasks": [
+            { "task": "Request platform access (Google, Meta, LinkedIn, etc.)", "owner": "SG", "weeks": [1] },
+            { "task": "Client grants access to all platforms", "owner": "Client", "weeks": [1] },
+            { "task": "Verify all access confirmed", "owner": "SG", "weeks": [2] },
+            { "task": "CRM access setup & validation", "owner": "Both", "weeks": [1, 2] }
+          ]
+        },
+        {
+          "name": "Tracking & Analytics",
+          "tasks": [
+            { "task": "Audit existing tracking setup", "owner": "SG", "weeks": [1] },
+            { "task": "Create tracking implementation plan", "owner": "SG", "weeks": [1, 2] },
+            { "task": "Implement/update GTM container", "owner": "SG", "weeks": [2, 3] },
+            { "task": "Set up conversion actions (Google, Meta, etc.)", "owner": "SG", "weeks": [2, 3] },
+            { "task": "Configure offline conversion import (if CRM)", "owner": "SG", "weeks": [3, 4] },
+            { "task": "Validate all tracking fires correctly", "owner": "SG", "weeks": [3] }
+          ]
+        },
+        {
+          "name": "Strategy & Planning",
+          "tasks": [
+            { "task": "Kickoff call", "owner": "Both", "weeks": [1], "milestone": true },
+            { "task": "Historical performance analysis", "owner": "SG", "weeks": [1, 2] },
+            { "task": "Competitor research & ad library review", "owner": "SG", "weeks": [1, 2] },
+            { "task": "Define KPIs, targets, and success metrics", "owner": "Both", "weeks": [2] },
+            { "task": "Develop campaign strategy & structure", "owner": "SG", "weeks": [2, 3] },
+            { "task": "Strategy presentation & approval", "owner": "Both", "weeks": [3], "milestone": true }
+          ]
+        },
+        {
+          "name": "Campaign Build",
+          "tasks": [
+            { "task": "Create campaign naming conventions", "owner": "SG", "weeks": [2] },
+            { "task": "Build campaign structure (Google)", "owner": "SG", "weeks": [3, 4] },
+            { "task": "Build campaign structure (Meta)", "owner": "SG", "weeks": [3, 4] },
+            { "task": "Build campaign structure (LinkedIn/Other)", "owner": "SG", "weeks": [4, 5] },
+            { "task": "Write ad copy (all platforms)", "owner": "SG", "weeks": [3, 4] },
+            { "task": "Request creative assets from Creative team", "owner": "SG", "weeks": [3] },
+            { "task": "Upload creatives and finalize ads", "owner": "SG", "weeks": [4] },
+            { "task": "QA all campaigns before launch", "owner": "SG", "weeks": [4] }
+          ]
+        },
+        {
+          "name": "Launch & Optimization",
+          "tasks": [
+            { "task": "Pre-launch checklist complete", "owner": "SG", "weeks": [4], "milestone": true },
+            { "task": "Launch campaigns", "owner": "SG", "weeks": [5], "milestone": true },
+            { "task": "Day 1-3 monitoring & adjustments", "owner": "SG", "weeks": [5] },
+            { "task": "Week 1 performance review", "owner": "Both", "weeks": [6] },
+            { "task": "Ongoing optimization (bids, budgets, audiences)", "owner": "SG", "weeks": [6, 7, 8, 9, 10, 11, 12] },
+            { "task": "A/B testing (copy, creative, audiences)", "owner": "SG", "weeks": [7, 8, 9, 10, 11, 12] }
+          ]
+        },
+        {
+          "name": "Reporting & Communication",
+          "tasks": [
+            { "task": "Set up reporting dashboard", "owner": "SG", "weeks": [3, 4] },
+            { "task": "Weekly status calls", "owner": "Both", "weeks": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "milestone": true },
+            { "task": "Month 1 performance report", "owner": "SG", "weeks": [4], "milestone": true },
+            { "task": "Month 2 performance report", "owner": "SG", "weeks": [8], "milestone": true },
+            { "task": "90-day review & strategy refresh", "owner": "Both", "weeks": [12], "milestone": true }
+          ]
+        }
+      ]
+    },
+    "seo_aeo": {
+      "name": "SEO & AEO",
+      "duration_weeks": 12,
+      "categories": [
+        {
+          "name": "Access & Setup",
+          "tasks": [
+            { "task": "Request GSC, GA4, CMS access", "owner": "SG", "weeks": [1] },
+            { "task": "Client grants platform access", "owner": "Client", "weeks": [1] },
+            { "task": "Set up SEO tools (Ahrefs, Screaming Frog, etc.)", "owner": "SG", "weeks": [1] },
+            { "task": "Get dev/CMS access for implementations", "owner": "Both", "weeks": [1, 2] }
+          ]
+        },
+        {
+          "name": "Technical Audit",
+          "tasks": [
+            { "task": "Kickoff call", "owner": "Both", "weeks": [1], "milestone": true },
+            { "task": "Run full technical site crawl", "owner": "SG", "weeks": [1, 2] },
+            { "task": "Indexation & crawlability audit", "owner": "SG", "weeks": [2] },
+            { "task": "Core Web Vitals & page speed audit", "owner": "SG", "weeks": [2] },
+            { "task": "Mobile usability review", "owner": "SG", "weeks": [2] },
+            { "task": "Schema markup audit", "owner": "SG", "weeks": [2] },
+            { "task": "Backlink profile analysis", "owner": "SG", "weeks": [2, 3] }
+          ]
+        },
+        {
+          "name": "Keyword & Content Strategy",
+          "tasks": [
+            { "task": "Keyword research & opportunity analysis", "owner": "SG", "weeks": [1, 2, 3] },
+            { "task": "Competitor keyword gap analysis", "owner": "SG", "weeks": [2, 3] },
+            { "task": "Content audit (existing pages)", "owner": "SG", "weeks": [2, 3] },
+            { "task": "Develop keyword targeting map", "owner": "SG", "weeks": [3] },
+            { "task": "Create content roadmap (90 days)", "owner": "SG", "weeks": [3] },
+            { "task": "Strategy presentation & approval", "owner": "Both", "weeks": [3], "milestone": true }
+          ]
+        },
+        {
+          "name": "Technical Implementation",
+          "tasks": [
+            { "task": "Deliver technical fix recommendations", "owner": "SG", "weeks": [3] },
+            { "task": "Implement critical technical fixes", "owner": "Both", "weeks": [4, 5, 6] },
+            { "task": "Schema markup implementation", "owner": "SG", "weeks": [4, 5] },
+            { "task": "XML sitemap optimization", "owner": "SG", "weeks": [4] },
+            { "task": "Internal linking optimization", "owner": "SG", "weeks": [5, 6, 7] }
+          ]
+        },
+        {
+          "name": "On-Page Optimization",
+          "tasks": [
+            { "task": "Title tag & meta description optimization", "owner": "SG", "weeks": [4, 5] },
+            { "task": "Header tag (H1-H6) optimization", "owner": "SG", "weeks": [5] },
+            { "task": "Image optimization (alt tags, compression)", "owner": "SG", "weeks": [5, 6] },
+            { "task": "Priority page content updates", "owner": "SG", "weeks": [6, 7, 8] }
+          ]
+        },
+        {
+          "name": "Content Development",
+          "tasks": [
+            { "task": "Create content briefs", "owner": "SG", "weeks": [5, 6, 7, 8, 9, 10, 11, 12] },
+            { "task": "Write/optimize blog content", "owner": "SG", "weeks": [6, 7, 8, 9, 10, 11, 12] },
+            { "task": "Client content review & approval", "owner": "Client", "weeks": [7, 8, 9, 10, 11, 12] },
+            { "task": "Publish content", "owner": "Both", "weeks": [7, 8, 9, 10, 11, 12] }
+          ]
+        },
+        {
+          "name": "Reporting & Communication",
+          "tasks": [
+            { "task": "Set up rank tracking", "owner": "SG", "weeks": [2] },
+            { "task": "Weekly status calls", "owner": "Both", "weeks": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "milestone": true },
+            { "task": "Month 1 SEO report", "owner": "SG", "weeks": [4], "milestone": true },
+            { "task": "Month 2 SEO report", "owner": "SG", "weeks": [8], "milestone": true },
+            { "task": "90-day review & roadmap refresh", "owner": "Both", "weeks": [12], "milestone": true }
+          ]
+        }
+      ]
+    },
+    "creative": {
+      "name": "Creative",
+      "duration_weeks": 12,
+      "categories": [
+        {
+          "name": "Discovery & Brand Review",
+          "tasks": [
+            { "task": "Kickoff call", "owner": "Both", "weeks": [1], "milestone": true },
+            { "task": "Receive brand guidelines & assets", "owner": "Client", "weeks": [1] },
+            { "task": "Review existing creative library", "owner": "SG", "weeks": [1] },
+            { "task": "Competitor creative audit", "owner": "SG", "weeks": [1, 2] },
+            { "task": "Document brand voice & visual guidelines", "owner": "SG", "weeks": [2] }
+          ]
+        },
+        {
+          "name": "Creative Strategy",
+          "tasks": [
+            { "task": "Define creative formats needed by channel", "owner": "SG", "weeks": [2] },
+            { "task": "Develop messaging angles & hooks", "owner": "SG", "weeks": [2] },
+            { "task": "Create creative brief for launch assets", "owner": "SG", "weeks": [2] },
+            { "task": "Creative strategy presentation", "owner": "Both", "weeks": [2], "milestone": true }
+          ]
+        },
+        {
+          "name": "Launch Asset Production",
+          "tasks": [
+            { "task": "Design static ad variants (Meta, Display)", "owner": "SG", "weeks": [3, 4] },
+            { "task": "Design responsive display ads (Google)", "owner": "SG", "weeks": [3, 4] },
+            { "task": "Create video ad concepts/scripts", "owner": "SG", "weeks": [3] },
+            { "task": "Produce video ads (if applicable)", "owner": "SG", "weeks": [4, 5] },
+            { "task": "Client creative review & feedback", "owner": "Client", "weeks": [4] },
+            { "task": "Revisions & final approval", "owner": "Both", "weeks": [5] },
+            { "task": "Deliver launch assets to Paid team", "owner": "SG", "weeks": [5], "milestone": true }
+          ]
+        },
+        {
+          "name": "Landing Pages (If In Scope)",
+          "tasks": [
+            { "task": "Review existing landing pages", "owner": "SG", "weeks": [2] },
+            { "task": "Design new landing page concepts", "owner": "SG", "weeks": [3, 4] },
+            { "task": "Landing page development", "owner": "SG", "weeks": [4, 5] },
+            { "task": "Landing page QA & launch", "owner": "Both", "weeks": [5] }
+          ]
+        },
+        {
+          "name": "Ongoing Creative & Iteration",
+          "tasks": [
+            { "task": "Weekly creative requests from Paid team", "owner": "SG", "weeks": [6, 7, 8, 9, 10, 11, 12] },
+            { "task": "A/B test creative variations", "owner": "SG", "weeks": [7, 8, 9, 10, 11, 12] },
+            { "task": "Performance-based creative iteration", "owner": "SG", "weeks": [8, 9, 10, 11, 12] },
+            { "task": "New format testing (UGC, animations, etc.)", "owner": "SG", "weeks": [9, 10, 11, 12] }
+          ]
+        },
+        {
+          "name": "Reporting & Communication",
+          "tasks": [
+            { "task": "Weekly creative syncs (with Paid)", "owner": "SG", "weeks": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "milestone": true },
+            { "task": "Creative performance review (Month 1)", "owner": "SG", "weeks": [4], "milestone": true },
+            { "task": "Creative performance review (Month 2)", "owner": "SG", "weeks": [8], "milestone": true },
+            { "task": "90-day creative retrospective", "owner": "Both", "weeks": [12], "milestone": true }
+          ]
+        }
+      ]
+    }
+  },
+  "owner_mapping": {
+    "SG": "Single Grain (Agency)",
+    "Client": "Client",
+    "Both": "Joint Responsibility"
+  },
+  "asana_config": {
+    "task_defaults": {
+      "days_per_week": 5,
+      "working_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    },
+    "priority_rules": {
+      "milestone": "high",
+      "client_dependency": "high",
+      "standard": "medium"
+    }
+  }
+}

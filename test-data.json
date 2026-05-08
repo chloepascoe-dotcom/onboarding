@@ -1,0 +1,259 @@
+{
+  "description": "Sample test data for Onboarding Agent hackathon testing",
+
+  "sample_webhook_payloads": {
+    "multi_service_enterprise": {
+      "description": "Enterprise client with all three services - high complexity",
+      "payload": {
+        "event": "deal.closed_won",
+        "timestamp": "2026-05-07T14:30:00Z",
+        "deal": {
+          "deal_id": "deal_98765",
+          "client_name": "TechFlow Industries",
+          "services": ["paid_media", "seo_aeo", "creative"],
+          "monthly_budget": 75000,
+          "contract_length_months": 12,
+          "kickoff_date": "2026-05-15",
+          "industry": "B2B SaaS",
+          "website": "https://techflow.io",
+          "contacts": [
+            {
+              "name": "Sarah Mitchell",
+              "email": "sarah.mitchell@techflow.io",
+              "role": "VP of Marketing",
+              "is_primary": true
+            },
+            {
+              "name": "David Chen",
+              "email": "david.chen@techflow.io",
+              "role": "Director of Demand Gen",
+              "is_primary": false
+            }
+          ],
+          "sales_notes": "Enterprise SaaS company looking to scale pipeline. Currently running some Google Ads in-house but not profitable. No SEO presence. Need full creative support - they have brand guidelines but no ad assets. Main KPI is qualified demo requests. Decision maker is VP Marketing but Director will be day-to-day contact.",
+          "custom_fields": {
+            "target_cpa": 150,
+            "current_monthly_spend": 25000,
+            "main_competitors": ["Competitor A", "Competitor B", "Competitor C"],
+            "sales_cycle_days": 45,
+            "average_deal_size": 48000
+          }
+        }
+      }
+    },
+
+    "paid_media_only_smb": {
+      "description": "SMB client with paid media only - low complexity",
+      "payload": {
+        "event": "deal.closed_won",
+        "timestamp": "2026-05-07T10:15:00Z",
+        "deal": {
+          "deal_id": "deal_54321",
+          "client_name": "Greenleaf Wellness",
+          "services": ["paid_media"],
+          "monthly_budget": 15000,
+          "contract_length_months": 6,
+          "kickoff_date": "2026-05-20",
+          "industry": "Health & Wellness",
+          "website": "https://greenleafwellness.com",
+          "contacts": [
+            {
+              "name": "Emma Rodriguez",
+              "email": "emma@greenleafwellness.com",
+              "role": "Founder & CEO",
+              "is_primary": true
+            }
+          ],
+          "sales_notes": "DTC supplements brand. Running Meta ads themselves with ok results but want to scale. Has existing creative assets. Focus on Meta and Google Shopping. Quick turnaround needed - wants to be live within 2 weeks.",
+          "custom_fields": {
+            "target_roas": 3.5,
+            "current_monthly_spend": 8000,
+            "main_competitors": ["Ritual", "Care/of"],
+            "average_order_value": 65
+          }
+        }
+      }
+    },
+
+    "seo_creative_midmarket": {
+      "description": "Mid-market client with SEO and Creative - medium complexity",
+      "payload": {
+        "event": "deal.closed_won",
+        "timestamp": "2026-05-07T16:45:00Z",
+        "deal": {
+          "deal_id": "deal_11223",
+          "client_name": "Atlas Financial Group",
+          "services": ["seo_aeo", "creative"],
+          "monthly_budget": 35000,
+          "contract_length_months": 12,
+          "kickoff_date": "2026-05-22",
+          "industry": "Financial Services",
+          "website": "https://atlasfinancial.com",
+          "contacts": [
+            {
+              "name": "Michael Torres",
+              "email": "mtorres@atlasfinancial.com",
+              "role": "CMO",
+              "is_primary": true
+            },
+            {
+              "name": "Jennifer Walsh",
+              "email": "jwalsh@atlasfinancial.com",
+              "role": "Content Manager",
+              "is_primary": false
+            }
+          ],
+          "sales_notes": "Regional financial advisory firm expanding nationally. Strong local SEO but no national presence. Need content strategy and thought leadership pieces. Creative for LinkedIn organic and potential future paid. Compliance review required on all content - factor in extra review cycles.",
+          "custom_fields": {
+            "target_keywords": ["financial advisor", "retirement planning", "wealth management"],
+            "current_organic_traffic": 12000,
+            "content_approval_required": true,
+            "compliance_review_days": 5
+          }
+        }
+      }
+    }
+  },
+
+  "team_data": {
+    "team_profiles": [
+      {
+        "id": "user_001",
+        "name": "Alex Kim",
+        "email": "alex.kim@singlegrain.com",
+        "slack_id": "U01ABC123",
+        "role": "Senior Paid Media Strategist",
+        "expertise": {
+          "primary": ["paid_media"],
+          "platforms": ["google_ads", "meta", "linkedin", "microsoft_ads"],
+          "industries": ["B2B SaaS", "Technology", "Professional Services"],
+          "strengths": ["Enterprise accounts", "Lead gen", "Complex attribution"]
+        },
+        "capacity": {
+          "max_accounts": 8,
+          "max_monthly_budget_managed": 500000
+        }
+      },
+      {
+        "id": "user_002",
+        "name": "Jordan Reyes",
+        "email": "jordan.reyes@singlegrain.com",
+        "slack_id": "U02DEF456",
+        "role": "Paid Media Manager",
+        "expertise": {
+          "primary": ["paid_media"],
+          "platforms": ["meta", "google_ads", "tiktok", "pinterest"],
+          "industries": ["E-commerce", "DTC", "Health & Wellness", "CPG"],
+          "strengths": ["DTC brands", "Shopping campaigns", "Creative testing"]
+        },
+        "capacity": {
+          "max_accounts": 10,
+          "max_monthly_budget_managed": 300000
+        }
+      },
+      {
+        "id": "user_003",
+        "name": "Sam Patel",
+        "email": "sam.patel@singlegrain.com",
+        "slack_id": "U03GHI789",
+        "role": "SEO Director",
+        "expertise": {
+          "primary": ["seo_aeo"],
+          "specialties": ["technical_seo", "content_strategy", "link_building"],
+          "industries": ["SaaS", "Finance", "Healthcare", "E-commerce"],
+          "strengths": ["Enterprise technical SEO", "Content-led growth", "International SEO"]
+        },
+        "capacity": {
+          "max_accounts": 6,
+          "max_monthly_hours": 120
+        }
+      },
+      {
+        "id": "user_004",
+        "name": "Riley Chen",
+        "email": "riley.chen@singlegrain.com",
+        "slack_id": "U04JKL012",
+        "role": "SEO Manager",
+        "expertise": {
+          "primary": ["seo_aeo"],
+          "specialties": ["local_seo", "content_optimization", "technical_audits"],
+          "industries": ["Local Services", "Healthcare", "Legal", "Real Estate"],
+          "strengths": ["Local SEO", "Content optimization", "Quick wins"]
+        },
+        "capacity": {
+          "max_accounts": 8,
+          "max_monthly_hours": 140
+        }
+      },
+      {
+        "id": "user_005",
+        "name": "Morgan Liu",
+        "email": "morgan.liu@singlegrain.com",
+        "slack_id": "U05MNO345",
+        "role": "Creative Director",
+        "expertise": {
+          "primary": ["creative"],
+          "specialties": ["brand_strategy", "video_production", "ad_creative"],
+          "industries": ["All"],
+          "strengths": ["Brand development", "Video ads", "High-end creative"]
+        },
+        "capacity": {
+          "max_accounts": 5,
+          "max_monthly_hours": 100
+        }
+      },
+      {
+        "id": "user_006",
+        "name": "Casey Brooks",
+        "email": "casey.brooks@singlegrain.com",
+        "slack_id": "U06PQR678",
+        "role": "Senior Designer",
+        "expertise": {
+          "primary": ["creative"],
+          "specialties": ["static_ads", "landing_pages", "social_creative"],
+          "industries": ["E-commerce", "DTC", "SaaS"],
+          "strengths": ["High-volume ad creative", "Rapid iteration", "Performance creative"]
+        },
+        "capacity": {
+          "max_accounts": 8,
+          "max_monthly_hours": 140
+        }
+      }
+    ],
+
+    "current_workload": {
+      "as_of": "2026-05-07",
+      "assignments": [
+        { "user_id": "user_001", "current_accounts": 6, "current_budget_managed": 380000, "upcoming_kickoffs": 1 },
+        { "user_id": "user_002", "current_accounts": 7, "current_budget_managed": 180000, "upcoming_kickoffs": 0 },
+        { "user_id": "user_003", "current_accounts": 5, "current_budget_managed": null, "current_hours": 95, "upcoming_kickoffs": 1 },
+        { "user_id": "user_004", "current_accounts": 6, "current_budget_managed": null, "current_hours": 110, "upcoming_kickoffs": 0 },
+        { "user_id": "user_005", "current_accounts": 4, "current_budget_managed": null, "current_hours": 85, "upcoming_kickoffs": 0 },
+        { "user_id": "user_006", "current_accounts": 6, "current_budget_managed": null, "current_hours": 120, "upcoming_kickoffs": 1 }
+      ]
+    }
+  },
+
+  "expected_outputs": {
+    "multi_service_enterprise": {
+      "expected_assignment": {
+        "paid_media_owner": "user_001",
+        "reasoning": "Alex Kim - Enterprise B2B SaaS expertise, complex attribution experience, has capacity for $75k budget account",
+        "seo_owner": "user_003",
+        "reasoning_seo": "Sam Patel - Enterprise technical SEO experience, SaaS industry match",
+        "creative_owner": "user_005",
+        "reasoning_creative": "Morgan Liu - Brand development for enterprise, video production capabilities"
+      },
+      "expected_complexity": "high",
+      "expected_channels": ["google_search", "google_display", "meta", "linkedin"]
+    },
+    "paid_media_only_smb": {
+      "expected_assignment": {
+        "paid_media_owner": "user_002",
+        "reasoning": "Jordan Reyes - DTC/wellness expertise, Meta + Shopping focus, has capacity"
+      },
+      "expected_complexity": "low",
+      "expected_channels": ["meta", "google_shopping"]
+    }
+  }
+}

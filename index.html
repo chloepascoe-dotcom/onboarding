@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OOO Return Debrief</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="logo-icon-large">📬</span>
+        <h1>OOO Return Debrief</h1>
+        <p>Get up to speed on what happened while you were away</p>
+      </div>
+
+      <div class="login-features">
+        <div class="feature-item">
+          <span>🚨</span>
+          <div>
+            <strong>Red Flags</strong>
+            <p>AI-detected urgent items needing immediate attention</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span>📊</span>
+          <div>
+            <strong>Email Analysis</strong>
+            <p>Real vs spam, categorized and prioritized</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span>📅</span>
+          <div>
+            <strong>Calendar Review</strong>
+            <p>Meetings missed and what's coming up</p>
+          </div>
+        </div>
+      </div>
+
+      <button id="googleLoginBtn" class="btn-google" onclick="startGoogleLogin()">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Connect with Google
+      </button>
+
+      <p class="login-note">
+        We'll analyze your Gmail and Calendar for the dates you were OOO.<br>
+        Your data is processed securely and never stored.
+      </p>
+
+      <button class="btn-demo" onclick="loadDemoData()">
+        Or try with demo data →
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Screen -->
+  <div id="loadingScreen" class="loading-screen" style="display: none;">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <h2 id="loadingTitle">Connecting to Gmail...</h2>
+      <p id="loadingSubtitle">This may take a moment</p>
+      <div class="loading-steps">
+        <div class="loading-step" id="step1">
+          <span class="step-icon">○</span>
+          <span>Fetching emails</span>
+        </div>
+        <div class="loading-step" id="step2">
+          <span class="step-icon">○</span>
+          <span>Categorizing messages</span>
+        </div>
+        <div class="loading-step" id="step3">
+          <span class="step-icon">○</span>
+          <span>AI analysis for priorities</span>
+        </div>
+        <div class="loading-step" id="step4">
+          <span class="step-icon">○</span>
+          <span>Fetching calendar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="mainApp" class="app" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <span class="logo-icon">📬</span>
+        <span class="logo-text">OOO Debrief</span>
+      </div>
+      <nav class="nav">
+        <a href="#overview" class="nav-item active" data-section="overview">
+          <span class="nav-icon">📊</span> Overview
+        </a>
+        <a href="#red-flags" class="nav-item" data-section="red-flags">
+          <span class="nav-icon">🚨</span> Red Flags
+          <span class="nav-badge danger" id="redFlagCount">0</span>
+        </a>
+        <a href="#priorities" class="nav-item" data-section="priorities">
+          <span class="nav-icon">⚡</span> Priorities
+        </a>
+        <a href="#email-breakdown" class="nav-item" data-section="email-breakdown">
+          <span class="nav-icon">📧</span> Email Analysis
+        </a>
+        <a href="#calendar" class="nav-item" data-section="calendar">
+          <span class="nav-icon">📅</span> Calendar
+        </a>
+        <a href="#senders" class="nav-item" data-section="senders">
+          <span class="nav-icon">👥</span> Top Senders
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-refresh" onclick="refreshData()">
+          <span>↻</span> Refresh Analysis
+        </button>
+        <button class="btn-logout" onclick="logout()">
+          Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>Welcome Back<span id="userName"></span>!</h1>
+          <p class="header-subtitle" id="headerSubtitle">Here's what happened while you were away</p>
+        </div>
+        <div class="header-right">
+          <div class="date-range">
+            <label>OOO Period:</label>
+            <input type="date" id="startDate">
+            <span>to</span>
+            <input type="date" id="endDate">
+            <button class="btn-update-dates" onclick="updateDateRange()">Update</button>
+          </div>
+          <div class="user-info">
+            <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=2d9a9a&color=fff" alt="User" class="avatar">
+          </div>
+        </div>
+      </header>
+
+      <!-- Key Insights Banner -->
+      <div class="insights-banner" id="insightsBanner" style="display: none;">
+        <div class="insights-icon">💡</div>
+        <div class="insights-content">
+          <strong>Key Insights</strong>
+          <p id="keyInsightsText"></p>
+        </div>
+        <button class="insights-close" onclick="this.parentElement.style.display='none'">×</button>
+      </div>
+
+      <!-- Content Sections -->
+      <div class="content">
+
+        <!-- Overview Section -->
+        <section id="overview" class="section active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon emails">📧</div>
+              <div class="stat-content">
+                <div class="stat-number" id="totalEmails">-</div>
+                <div class="stat-label">Total Emails</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon real">✓</div>
+              <div class="stat-content">
+                <div class="stat-number" id="realEmails">-</div>
+                <div class="stat-label">Actionable</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon spam">🗑</div>
+              <div class="stat-content">
+                <div class="stat-number" id="spamEmails">-</div>
+                <div class="stat-label">Spam/Promo</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon automated">🤖</div>
+              <div class="stat-content">
+                <div class="stat-number" id="automatedEmails">-</div>
+                <div class="stat-label">Automated</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="overview-grid">
+            <div class="card urgent-summary">
+              <h3>🚨 Needs Immediate Attention</h3>
+              <div class="urgent-list" id="urgentList">
+                <div class="empty-state">No red flags detected</div>
+              </div>
+            </div>
+
+            <div class="card quick-stats">
+              <h3>📈 Quick Stats</h3>
+              <div class="quick-stat-item">
+                <span class="qs-label">Emails requiring response</span>
+                <span class="qs-value" id="needsResponse">-</span>
+              </div>
+              <div class="quick-stat-item">
+                <span class="qs-label">Meetings missed</span>
+                <span class="qs-value" id="meetingsMissed">-</span>
+              </div>
+              <div class="quick-stat-item">
+                <span class="qs-label">Meetings this week</span>
+                <span class="qs-value" id="meetingsThisWeek">-</span>
+              </div>
+              <div class="quick-stat-item">
+                <span class="qs-label">Meetings to schedule</span>
+                <span class="qs-value" id="meetingsToScheduleCount">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card email-timeline">
+            <h3>📊 Email Volume by Day</h3>
+            <div class="timeline-chart" id="timelineChart">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Red Flags Section -->
+        <section id="red-flags" class="section">
+          <div class="section-header">
+            <h2>🚨 Red Flags</h2>
+            <p>Critical items that need your immediate attention</p>
+          </div>
+          <div class="red-flags-list" id="redFlagsList">
+            <div class="empty-state">No red flags detected - looking good!</div>
+          </div>
+        </section>
+
+        <!-- Priorities Section -->
+        <section id="priorities" class="section">
+          <div class="section-header">
+            <h2>⚡ Prioritized Action Items</h2>
+            <p>AI-ranked list of what to tackle first</p>
+          </div>
+          <div class="priorities-list" id="prioritiesList">
+            <div class="empty-state">Analyzing priorities...</div>
+          </div>
+        </section>
+
+        <!-- Email Breakdown Section -->
+        <section id="email-breakdown" class="section">
+          <div class="section-header">
+            <h2>📧 Email Breakdown</h2>
+            <p>Your inbox categorized and analyzed</p>
+          </div>
+
+          <div class="breakdown-grid">
+            <div class="card">
+              <h3>✅ Real / Actionable</h3>
+              <div class="category-list" id="realEmailsList">
+                <div class="empty-state">Loading...</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>🗑 Spam & Promotions</h3>
+              <div class="spam-summary" id="spamSummary">
+                <div class="empty-state">Loading...</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>🤖 Automated / Notifications</h3>
+              <div class="category-list" id="automatedList">
+                <div class="empty-state">Loading...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Calendar Section -->
+        <section id="calendar" class="section">
+          <div class="section-header">
+            <h2>📅 Calendar Overview</h2>
+            <p>Meetings you missed and what's coming up</p>
+          </div>
+
+          <div class="calendar-grid">
+            <div class="card">
+              <h3>❌ Meetings You Missed</h3>
+              <div class="meetings-list" id="missedMeetings">
+                <div class="empty-state">Loading...</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>📆 This Week's Schedule</h3>
+              <div class="meetings-list" id="upcomingMeetings">
+                <div class="empty-state">Loading...</div>
+              </div>
+            </div>
+
+            <div class="card full-width">
+              <h3>📝 Meetings to Schedule</h3>
+              <p class="card-subtitle">Based on email requests and follow-up needs</p>
+              <div class="meetings-to-schedule" id="meetingsToSchedule">
+                <div class="empty-state">AI is analyzing email requests...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Top Senders Section -->
+        <section id="senders" class="section">
+          <div class="section-header">
+            <h2>👥 Top Senders</h2>
+            <p>Who emailed you the most while you were away</p>
+          </div>
+
+          <div class="senders-grid">
+            <div class="card">
+              <h3>📊 By Volume (Real Emails Only)</h3>
+              <div class="senders-list" id="topSendersList">
+                <div class="empty-state">Loading...</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>🗑 Spam Sources</h3>
+              <p class="card-subtitle">Consider unsubscribing from these</p>
+              <div class="spam-senders-list" id="spamSendersList">
+                <div class="empty-state">Loading...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

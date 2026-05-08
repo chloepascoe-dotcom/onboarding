@@ -1,0 +1,301 @@
+{
+  "name": "Onboarding Agent - Phase 1 (Core Loop)",
+  "meta": {
+    "description": "Webhook → Claude → Google Sheets → Slack workflow for client onboarding"
+  },
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Webhook: Deal Closed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deal-closed",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      }
+    },
+    {
+      "id": "2",
+      "name": "Build Claude Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "parameters": {
+        "jsCode": "const deal = $input.first().json.deal;\n\nconst teamWorkload = `\n- Alex Kim (user_001): 6/8 accounts, $380k managed, Senior PM - B2B SaaS expert\n- Jordan Reyes (user_002): 7/10 accounts, $180k managed, PM - DTC/E-commerce expert\n- Sam Patel (user_003): 5/6 accounts, SEO Director - Enterprise technical SEO\n- Riley Chen (user_004): 6/8 accounts, SEO Manager - Local SEO specialist\n- Morgan Liu (user_005): 4/5 accounts, Creative Director - Brand & video\n- Casey Brooks (user_006): 6/8 accounts, Senior Designer - Performance creative\n`;\n\nconst prompt = `A new client has signed. Analyze and assign owners.\n\n## Deal\n- Client: ${deal.client_name}\n- Services: ${deal.services.join(', ')}\n- Budget: $${deal.monthly_budget}/mo\n- Kickoff: ${deal.kickoff_date}\n- Industry: ${deal.industry}\n- Website: ${deal.website}\n- Sales Notes: ${deal.sales_notes || 'None'}\n\n## Team\n${teamWorkload}\n\n## Output JSON:\n{\n  \"scope\": {\n    \"services\": [\"paid_media\"],\n    \"channels\": [\"google_search\", \"meta\"],\n    \"complexity\": \"low|medium|high\"\n  },\n  \"assignments\": {\n    \"paid_media\": { \"owner_id\": \"user_001\", \"owner_name\": \"Alex Kim\", \"reasoning\": \"...\" }\n  },\n  \"first_week_priorities\": [\"Task 1\", \"Task 2\", \"Task 3\"]\n}`;\n\nreturn [{ json: { deal, prompt } }];"
+      }
+    },
+    {
+      "id": "3",
+      "name": "Claude: Scope & Assign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $credentials.anthropicApi.apiKey }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "model", "value": "claude-sonnet-4-20250514" },
+            { "name": "max_tokens", "value": "1500" },
+            { "name": "system", "value": "You are an onboarding coordinator. Analyze deals and assign owners. Always respond with valid JSON only." },
+            { "name": "messages", "value": "=[{\"role\": \"user\", \"content\": $json.prompt}]" }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ANTHROPIC_CRED_ID",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "id": "4",
+      "name": "Parse Claude Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst deal = $('Build Claude Prompt').first().json.deal;\n\nlet parsed;\ntry {\n  // Extract text content from Claude response\n  const text = response.content[0].text;\n  parsed = JSON.parse(text);\n} catch (e) {\n  parsed = { error: 'Failed to parse Claude response', raw: response };\n}\n\nreturn [{ json: { deal, ai_response: parsed } }];"
+      }
+    },
+    {
+      "id": "5",
+      "name": "Google Sheets: Create Spreadsheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1050, 300],
+      "parameters": {
+        "resource": "spreadsheet",
+        "operation": "create",
+        "title": "={{ 'Onboarding - ' + $json.deal.client_name }}",
+        "sheetNames": "Timeline, Access Checklist, Contacts"
+      },
+      "credentials": {
+        "googleSheetsApi": {
+          "id": "GOOGLE_SHEETS_CRED_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "6",
+      "name": "Build Sheet Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300],
+      "parameters": {
+        "jsCode": "const prevData = $('Parse Claude Response').first().json;\nconst spreadsheet = $input.first().json;\nconst deal = prevData.deal;\nconst ai = prevData.ai_response;\n\n// Build timeline rows based on first week priorities\nconst timelineRows = ai.first_week_priorities.map((task, i) => ({\n  week: 'Week 1',\n  task: task,\n  owner: Object.values(ai.assignments)[0]?.owner_name || 'TBD',\n  status: 'Not Started',\n  due_date: deal.kickoff_date\n}));\n\n// Build access checklist rows\nconst accessRows = [\n  { platform: 'Google Ads', status: 'Pending', owner: Object.values(ai.assignments)[0]?.owner_name || 'TBD', notes: '' },\n  { platform: 'Meta Ads', status: 'Pending', owner: Object.values(ai.assignments)[0]?.owner_name || 'TBD', notes: '' },\n  { platform: 'Google Analytics', status: 'Pending', owner: Object.values(ai.assignments)[0]?.owner_name || 'TBD', notes: '' },\n  { platform: 'Google Tag Manager', status: 'Pending', owner: Object.values(ai.assignments)[0]?.owner_name || 'TBD', notes: '' },\n  { platform: 'CRM Access', status: 'Pending', owner: Object.values(ai.assignments)[0]?.owner_name || 'TBD', notes: '' }\n];\n\n// Build contacts from deal\nconst contactRows = (deal.contacts || []).map(c => ({\n  name: c.name,\n  email: c.email,\n  role: c.is_primary ? 'Primary Contact' : 'Contact',\n  phone: c.phone || ''\n}));\n\nreturn [{\n  json: {\n    spreadsheetId: spreadsheet.spreadsheetId,\n    spreadsheetUrl: spreadsheet.spreadsheetUrl,\n    deal: deal,\n    ai_response: ai,\n    timelineRows: timelineRows,\n    accessRows: accessRows,\n    contactRows: contactRows\n  }\n}];"
+      }
+    },
+    {
+      "id": "7",
+      "name": "Google Sheets: Add Timeline Header",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1450, 200],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.spreadsheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Timeline"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Week": "Week",
+            "Task": "Task",
+            "Owner": "Owner",
+            "Status": "Status",
+            "Due Date": "Due Date"
+          }
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsApi": {
+          "id": "GOOGLE_SHEETS_CRED_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "8",
+      "name": "Google Sheets: Add Timeline Rows",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1650, 200],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Build Sheet Data').first().json.spreadsheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Timeline"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsApi": {
+          "id": "GOOGLE_SHEETS_CRED_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "9",
+      "name": "Split Timeline Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 350],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nreturn data.timelineRows.map(row => ({ json: row }));"
+      }
+    },
+    {
+      "id": "10",
+      "name": "Merge Back",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 300],
+      "parameters": {
+        "jsCode": "const sheetData = $('Build Sheet Data').first().json;\nreturn [{ json: sheetData }];"
+      }
+    },
+    {
+      "id": "11",
+      "name": "Slack: Team Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [2050, 300],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "={{ $env.SLACK_CHANNEL_ID }}",
+        "text": "New Client Onboarding",
+        "blocksUi": {
+          "blocksValues": [
+            {
+              "type": "header",
+              "text": {
+                "type": "plain_text",
+                "text": "={{ 'New Client: ' + $json.deal.client_name }}"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "={{ '*Services:* ' + $json.deal.services.join(', ') + '\\n*Budget:* $' + $json.deal.monthly_budget + '/mo\\n*Kickoff:* ' + $json.deal.kickoff_date + '\\n*Complexity:* ' + $json.ai_response.scope.complexity }}"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "={{ '*Assigned Owners:*\\n' + Object.entries($json.ai_response.assignments).map(([svc, a]) => '• ' + svc + ': ' + a.owner_name).join('\\n') }}"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "={{ '*Onboarding Sheet:* ' + $json.spreadsheetUrl }}"
+              }
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "SLACK_CRED_ID",
+          "name": "Slack"
+        }
+      }
+    },
+    {
+      "id": "12",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2250, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, client: $json.deal.client_name, spreadsheet_url: $json.spreadsheetUrl, assignments: $json.ai_response.assignments } }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: Deal Closed": {
+      "main": [[{ "node": "Build Claude Prompt", "type": "main", "index": 0 }]]
+    },
+    "Build Claude Prompt": {
+      "main": [[{ "node": "Claude: Scope & Assign", "type": "main", "index": 0 }]]
+    },
+    "Claude: Scope & Assign": {
+      "main": [[{ "node": "Parse Claude Response", "type": "main", "index": 0 }]]
+    },
+    "Parse Claude Response": {
+      "main": [[{ "node": "Google Sheets: Create Spreadsheet", "type": "main", "index": 0 }]]
+    },
+    "Google Sheets: Create Spreadsheet": {
+      "main": [[{ "node": "Build Sheet Data", "type": "main", "index": 0 }]]
+    },
+    "Build Sheet Data": {
+      "main": [
+        [
+          { "node": "Google Sheets: Add Timeline Header", "type": "main", "index": 0 },
+          { "node": "Split Timeline Rows", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Google Sheets: Add Timeline Header": {
+      "main": [[{ "node": "Merge Back", "type": "main", "index": 0 }]]
+    },
+    "Split Timeline Rows": {
+      "main": [[{ "node": "Google Sheets: Add Timeline Rows", "type": "main", "index": 0 }]]
+    },
+    "Google Sheets: Add Timeline Rows": {
+      "main": [[{ "node": "Merge Back", "type": "main", "index": 0 }]]
+    },
+    "Merge Back": {
+      "main": [[{ "node": "Slack: Team Notification", "type": "main", "index": 0 }]]
+    },
+    "Slack: Team Notification": {
+      "main": [[{ "node": "Return Success", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

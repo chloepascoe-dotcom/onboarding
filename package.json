@@ -1,0 +1,14 @@
+{
+  "name": "ooo-debrief",
+  "version": "1.0.0",
+  "description": "OOO Return Debrief - Gmail integration with AI analysis",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
+    "googleapis": "^144.0.0"
+  }
+}
