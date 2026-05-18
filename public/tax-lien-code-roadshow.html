@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tax Lien Code - Virtual Roadshow Plan</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+      min-height: 100vh;
+      padding: 50px;
+      color: #fff;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 50px; }
+    .logo { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px; }
+    h1 { font-size: 2.2rem; font-weight: 300; margin-bottom: 8px; }
+    h1 span { color: #60a5fa; font-weight: 600; }
+    .subtitle { color: #94a3b8; font-size: 1.1rem; margin-bottom: 8px; }
+    .date { color: #64748b; font-size: 0.9rem; }
+
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(96,165,250,0.15) 0%, rgba(96,165,250,0.05) 100%);
+      border: 1px solid rgba(96,165,250,0.3);
+      border-radius: 12px;
+      padding: 25px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .highlight-box p {
+      color: #e2e8f0;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .highlight-box .big {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #60a5fa;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .agenda-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .agenda-table th {
+      text-align: left;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .agenda-table td {
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      vertical-align: top;
+    }
+    .agenda-table tr:last-child td {
+      border-bottom: none;
+    }
+    .time {
+      color: #60a5fa;
+      font-weight: 600;
+      font-size: 0.9rem;
+      width: 80px;
+    }
+    .section-name {
+      color: #fff;
+      font-weight: 500;
+    }
+    .duration {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      text-align: right;
+      width: 80px;
+    }
+    .break-row td {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    .section-detail {
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .section-detail:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .section-detail h3 {
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-detail h3 .time-badge {
+      background: rgba(96,165,250,0.2);
+      color: #60a5fa;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+    .section-detail p {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .section-detail ul {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      margin-left: 20px;
+    }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    .checklist-group h4 {
+      color: #60a5fa;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .checklist-group ul {
+      list-style: none;
+      margin: 0;
+    }
+    .checklist-group li {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      padding: 8px 0;
+      padding-left: 28px;
+      position: relative;
+    }
+    .checklist-group li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(96,165,250,0.4);
+      border-radius: 4px;
+    }
+
+    .idea-format {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 15px;
+    }
+    .idea-format h4 {
+      color: #fff;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+    .idea-format ul {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      line-height: 1.8;
+      margin-left: 20px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 20px; }
+      .checklist { grid-template-columns: 1fr; }
+      .agenda-table .duration { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Single Grain</div>
+      <h1>Tax Lien Code <span>Virtual Roadshow</span></h1>
+      <div class="subtitle">Annual Planning & Strategy Session</div>
+      <div class="date">End of June 2026 | 12:00 - 4:00 PM</div>
+    </header>
+
+    <div class="highlight-box">
+      <p class="big">4-Hour Working Session | Lunch Provided</p>
+      <p>This will be the pilot for all future client roadshows. We'll review the year, present annual ideas, brainstorm together, and build a prioritized roadmap for the next 12 months.</p>
+    </div>
+
+    <div class="card">
+      <h2>Agenda Overview</h2>
+      <table class="agenda-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Section</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="time">12:00</td>
+            <td class="section-name">Lunch + Settle In</td>
+            <td class="duration">15 min</td>
+          </tr>
+          <tr>
+            <td class="time">12:15</td>
+            <td class="section-name">Year in Review: What Worked, What Didn't</td>
+            <td class="duration">30 min</td>
+          </tr>
+          <tr>
+            <td class="time">12:45</td>
+            <td class="section-name">Strategic Alignment: Goals for Next 12 Months</td>
+            <td class="duration">30 min</td>
+          </tr>
+          <tr>
+            <td class="time">1:15</td>
+            <td class="section-name">Market & Competitive Landscape</td>
+            <td class="duration">20 min</td>
+          </tr>
+          <tr class="break-row">
+            <td class="time">1:35</td>
+            <td class="section-name">Break</td>
+            <td class="duration">10 min</td>
+          </tr>
+          <tr>
+            <td class="time">1:45</td>
+            <td class="section-name">Single Grain Presents: Annual Ideas</td>
+            <td class="duration">45 min</td>
+          </tr>
+          <tr>
+            <td class="time">2:30</td>
+            <td class="section-name">Collaborative Brainstorm: What Else?</td>
+            <td class="duration">30 min</td>
+          </tr>
+          <tr class="break-row">
+            <td class="time">3:00</td>
+            <td class="section-name">Break</td>
+            <td class="duration">10 min</td>
+          </tr>
+          <tr>
+            <td class="time">3:10</td>
+            <td class="section-name">Prioritization Exercise: Stack Rank Together</td>
+            <td class="duration">25 min</td>
+          </tr>
+          <tr>
+            <td class="time">3:35</td>
+            <td class="section-name">Build the Roadmap: Q3 '26 - H1 '27</td>
+            <td class="duration">20 min</td>
+          </tr>
+          <tr>
+            <td class="time">3:55</td>
+            <td class="section-name">Commitments & Next Steps</td>
+            <td class="duration">5 min</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Session Details</h2>
+
+      <div class="section-detail">
+        <h3>Year in Review <span class="time-badge">30 min</span></h3>
+        <p>Honest look back at the past 12 months of partnership.</p>
+        <ul>
+          <li>Top 3-5 wins with metrics and context</li>
+          <li>Honest assessment of misses or pivots</li>
+          <li>YoY performance trends</li>
+          <li>What we learned that informs next year</li>
+        </ul>
+      </div>
+
+      <div class="section-detail">
+        <h3>Strategic Alignment <span class="time-badge">30 min</span></h3>
+        <p>Understand their business direction to ensure marketing supports it.</p>
+        <ul>
+          <li>Their business goals for next 12 months</li>
+          <li>Any shifts in audience, product, or market focus</li>
+          <li>Budget trajectory and investment appetite</li>
+          <li>Internal changes (team, leadership, priorities)</li>
+          <li>What does "great" look like a year from now?</li>
+        </ul>
+      </div>
+
+      <div class="section-detail">
+        <h3>Market & Competitive Landscape <span class="time-badge">20 min</span></h3>
+        <p>Share what we're seeing in their space.</p>
+        <ul>
+          <li>What competitors are doing (ads, content, positioning)</li>
+          <li>Industry trends affecting tax lien space</li>
+          <li>New channels or tactics worth watching</li>
+          <li>Threats and opportunities we see</li>
+        </ul>
+      </div>
+
+      <div class="section-detail">
+        <h3>Single Grain Presents: Annual Ideas <span class="time-badge">45 min</span></h3>
+        <p>We come prepared with 5-7 ideas for the next year.</p>
+        <div class="idea-format">
+          <h4>Each Idea Includes:</h4>
+          <ul>
+            <li>The opportunity - what it is</li>
+            <li>Why we think it works for them</li>
+            <li>What it requires (budget, effort, timeline)</li>
+            <li>Projected impact range</li>
+            <li>Risks and how we'd mitigate</li>
+          </ul>
+        </div>
+        <p style="margin-top: 15px;">Mix of: expansion of what's working, new channels, efficiency plays, creative bets.</p>
+      </div>
+
+      <div class="section-detail">
+        <h3>Collaborative Brainstorm <span class="time-badge">30 min</span></h3>
+        <p>Open floor for ideas from both sides.</p>
+        <ul>
+          <li>What ideas do they have?</li>
+          <li>What have they seen competitors do that intrigued them?</li>
+          <li>What internal initiatives could marketing support?</li>
+          <li>Wild ideas welcome - we'll filter later</li>
+        </ul>
+      </div>
+
+      <div class="section-detail">
+        <h3>Prioritization Exercise <span class="time-badge">25 min</span></h3>
+        <p>Work together to decide what matters most.</p>
+        <ul>
+          <li>All ideas on the table (ours + theirs)</li>
+          <li>Score together on: Impact, Effort, Strategic Fit</li>
+          <li>Stack rank into: Do Now, Do Next, Explore Later, Park</li>
+        </ul>
+      </div>
+
+      <div class="section-detail">
+        <h3>Build the Roadmap <span class="time-badge">20 min</span></h3>
+        <p>Turn priorities into a timeline.</p>
+        <ul>
+          <li>Map prioritized ideas to quarters</li>
+          <li>Identify dependencies and sequencing</li>
+          <li>Flag resource or budget decisions needed</li>
+          <li>Align on what's confirmed vs. tentative</li>
+        </ul>
+      </div>
+
+      <div class="section-detail">
+        <h3>Commitments & Next Steps <span class="time-badge">5 min</span></h3>
+        <ul>
+          <li>Clear action items with owners</li>
+          <li>Timeline for proposals on new initiatives</li>
+          <li>When to reconvene for check-in</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Prep Checklist (2 Weeks Before)</h2>
+      <div class="checklist">
+        <div class="checklist-group">
+          <h4>Data & Analysis</h4>
+          <ul>
+            <li>Pull 12-month performance data</li>
+            <li>Build YoY comparison</li>
+            <li>Competitor audit (ads, landing pages)</li>
+            <li>Industry trend research</li>
+          </ul>
+        </div>
+        <div class="checklist-group">
+          <h4>Ideas Development</h4>
+          <ul>
+            <li>Brainstorm internally: 10+ ideas</li>
+            <li>Narrow to 5-7 strongest</li>
+            <li>Build mini-business case for each</li>
+            <li>Create presentation slides</li>
+          </ul>
+        </div>
+        <div class="checklist-group">
+          <h4>Logistics</h4>
+          <ul>
+            <li>Confirm attendees both sides</li>
+            <li>Send calendar hold with agenda</li>
+            <li>Arrange lunch delivery</li>
+            <li>Test tech setup</li>
+          </ul>
+        </div>
+        <div class="checklist-group">
+          <h4>Session Materials</h4>
+          <ul>
+            <li>Assign note-taker</li>
+            <li>Prepare Miro/FigJam for brainstorm</li>
+            <li>Create prioritization template</li>
+            <li>Roadmap template ready</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <p>This session will become the template for all Tier 1 client roadshows. Feedback welcome.</p>
+    </div>
+
+    <div class="footer">
+      Single Grain | Draft v1 | May 2026
+    </div>
+  </div>
+</body>
+</html>
