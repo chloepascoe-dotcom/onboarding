@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smartling - ChatGPT Ads Pilot Build Instructions</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 40px;
+      color: #fff;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 40px; }
+    .logo { font-size: 0.9rem; color: #fb923c; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+    h1 { font-size: 2rem; font-weight: 300; margin-bottom: 10px; }
+    h1 span { color: #10a37f; font-weight: 600; }
+    .subtitle { color: #94a3b8; font-size: 1rem; }
+
+    .section {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 24px;
+    }
+    .section.warning {
+      border-color: rgba(251,146,60,0.3);
+      background: linear-gradient(135deg, rgba(251,146,60,0.1) 0%, rgba(251,146,60,0.02) 100%);
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #10a37f;
+    }
+    .section.warning .section-title { color: #fb923c; }
+
+    .checklist { list-style: none; }
+    .checklist li {
+      padding: 10px 0;
+      padding-left: 30px;
+      position: relative;
+      color: #e2e8f0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .checklist li::before {
+      content: "☐";
+      position: absolute;
+      left: 0;
+      color: #64748b;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th { text-align: left; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    td { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; font-size: 0.9rem; }
+
+    .highlight { color: #10a37f; font-weight: 600; }
+    .code {
+      background: rgba(0,0,0,0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #10a37f;
+    }
+
+    .campaign-structure {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 20px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      color: #94a3b8;
+    }
+    .campaign-structure .folder { color: #10a37f; }
+    .campaign-structure .campaign { color: #e2e8f0; }
+
+    .ad-example {
+      background: rgba(16,163,127,0.1);
+      border: 1px solid rgba(16,163,127,0.2);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 15px 0;
+    }
+    .ad-example .label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .ad-example .headline { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 5px; }
+    .ad-example .body { color: #94a3b8; font-size: 0.9rem; line-height: 1.5; }
+    .ad-example .cta { margin-top: 10px; }
+    .ad-example .cta span { background: #10a37f; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    .topic-tag {
+      display: inline-block;
+      background: rgba(16,163,127,0.2);
+      color: #10a37f;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      margin: 3px;
+    }
+
+    .footer { text-align: center; margin-top: 40px; color: #64748b; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Internal Build Doc</div>
+      <h1>Smartling <span>ChatGPT Ads</span></h1>
+      <p class="subtitle">Step-by-step build instructions for the team</p>
+    </header>
+
+    <div class="section warning">
+      <div class="section-title">⚠️ Key Constraint: No Conversion Tracking</div>
+      <p style="color: #e2e8f0; line-height: 1.6;">
+        Conversion tracking is not yet available. Optimize toward <strong>engagement metrics</strong> (CTR, CPC) and use
+        <strong>GA4 traffic quality</strong> (time on site, pages/session, bounce rate) as proxy signals.
+        Manually track demo requests attributed to ChatGPT traffic.
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Pre-Build Checklist</div>
+      <ul class="checklist">
+        <li>ChatGPT Ads account access confirmed</li>
+        <li>Billing set up with $12.5k monthly pilot budget</li>
+        <li>GA4 access confirmed (for traffic quality analysis)</li>
+        <li>Landing page URLs finalized</li>
+        <li>Brand assets received (logo, colors, guidelines)</li>
+        <li>UTM parameters defined and documented</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">UTM Convention</div>
+      <p style="color: #94a3b8; margin-bottom: 15px;">Strict UTM structure for all ChatGPT ad links:</p>
+      <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; color: #10a37f; overflow-x: auto;">
+        ?utm_source=chatgpt&utm_medium=paid-ai&utm_campaign=[campaign-name]&utm_content=[ad-variant]
+      </div>
+      <table style="margin-top: 20px;">
+        <tr><th>Parameter</th><th>Value</th></tr>
+        <tr><td>utm_source</td><td><span class="code">chatgpt</span></td></tr>
+        <tr><td>utm_medium</td><td><span class="code">paid-ai</span></td></tr>
+        <tr><td>utm_campaign</td><td><span class="code">chatgpt_highintent</span> / <span class="code">chatgpt_competitor</span> / <span class="code">chatgpt_awareness</span></td></tr>
+        <tr><td>utm_content</td><td><span class="code">v1-demo</span> / <span class="code">v2-casestudy</span> / etc.</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Campaign Structure</div>
+      <div class="campaign-structure">
+        <span class="folder">Smartling (Account) — 60-Day Pilot</span><br>
+        ├── <span class="campaign">High-Intent Topics</span> — $7,500/mo (60%)<br>
+        │   ├── Translation Software<br>
+        │   ├── Localization Tools<br>
+        │   └── TMS / Translation Management<br>
+        ├── <span class="campaign">Competitor Conquesting</span> — $3,125/mo (25%)<br>
+        │   ├── Phrase / Lokalise<br>
+        │   ├── Transifex / Crowdin<br>
+        │   └── Generic "alternative" queries<br>
+        └── <span class="campaign">Awareness / Education</span> — $1,875/mo (15%)<br>
+            ├── Global Expansion<br>
+            └── Multilingual Content Strategy
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Topic Targeting</div>
+      <p style="color: #94a3b8; margin-bottom: 15px;">Target these conversation topics/keywords:</p>
+
+      <p style="color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; margin-bottom: 10px;">High-Intent (Priority 1)</p>
+      <div>
+        <span class="topic-tag">translation management software</span>
+        <span class="topic-tag">translation management system</span>
+        <span class="topic-tag">TMS software</span>
+        <span class="topic-tag">localization platform</span>
+        <span class="topic-tag">localization software</span>
+        <span class="topic-tag">enterprise translation</span>
+        <span class="topic-tag">website translation tool</span>
+        <span class="topic-tag">app localization</span>
+      </div>
+
+      <p style="color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; margin-bottom: 10px;">Competitor (Priority 1)</p>
+      <div>
+        <span class="topic-tag">phrase vs lokalise</span>
+        <span class="topic-tag">transifex alternative</span>
+        <span class="topic-tag">crowdin alternative</span>
+        <span class="topic-tag">lokalise competitor</span>
+        <span class="topic-tag">memsource alternative</span>
+        <span class="topic-tag">best translation platform</span>
+      </div>
+
+      <p style="color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; margin-bottom: 10px;">Awareness (Priority 2)</p>
+      <div>
+        <span class="topic-tag">launch product internationally</span>
+        <span class="topic-tag">global expansion strategy</span>
+        <span class="topic-tag">multilingual content management</span>
+        <span class="topic-tag">translation workflow</span>
+        <span class="topic-tag">localize my app</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Ad Creative</div>
+      <p style="color: #94a3b8; margin-bottom: 20px;">Build 3-4 variants per campaign. Keep copy native and helpful:</p>
+
+      <div class="ad-example">
+        <div class="label">High-Intent — Demo Focus</div>
+        <div class="headline">Smartling: Enterprise Translation Management</div>
+        <div class="body">Translate content 50% faster with AI-powered workflows. Trusted by brands like [logos]. Manage 150+ languages in one platform.</div>
+        <div class="cta"><span>Request a Demo</span></div>
+      </div>
+
+      <div class="ad-example">
+        <div class="label">Competitor — Alternative Position</div>
+        <div class="headline">Looking for a Lokalise Alternative?</div>
+        <div class="body">Smartling offers enterprise-grade translation management with dedicated support and AI-powered automation. See why global brands switch.</div>
+        <div class="cta"><span>Compare Solutions</span></div>
+      </div>
+
+      <div class="ad-example">
+        <div class="label">Pain Point — Problem/Solution</div>
+        <div class="headline">Still Managing Translations in Spreadsheets?</div>
+        <div class="body">There's a better way. Smartling centralizes your translation workflow, automates repetitive tasks, and maintains brand consistency across all languages.</div>
+        <div class="cta"><span>Learn More</span></div>
+      </div>
+
+      <div class="ad-example">
+        <div class="label">Social Proof — Trust</div>
+        <div class="headline">How [Brand] Reduced Translation Time by 60%</div>
+        <div class="body">Leading enterprises use Smartling to localize faster without sacrificing quality. Read the case study.</div>
+        <div class="cta"><span>Read Case Study</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Pilot Budget & Pacing</div>
+      <table>
+        <tr>
+          <th>Campaign</th>
+          <th>Monthly</th>
+          <th>Daily</th>
+          <th>Target CPC</th>
+        </tr>
+        <tr>
+          <td>High-Intent Topics</td>
+          <td class="highlight">$7,500</td>
+          <td>~$250</td>
+          <td><$12</td>
+        </tr>
+        <tr>
+          <td>Competitor Conquesting</td>
+          <td class="highlight">$3,125</td>
+          <td>~$104</td>
+          <td><$18</td>
+        </tr>
+        <tr>
+          <td>Awareness / Education</td>
+          <td>$1,875</td>
+          <td>~$63</td>
+          <td><$10</td>
+        </tr>
+        <tr style="background: rgba(16,163,127,0.1);">
+          <td><strong>Total</strong></td>
+          <td class="highlight"><strong>$12,500</strong></td>
+          <td><strong>~$417</strong></td>
+          <td>—</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Optimization Playbook (No Conversions)</div>
+      <div class="two-col">
+        <div>
+          <p style="color: #64748b; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 10px;">Week 1-2: Launch</p>
+          <ul style="list-style: none; color: #94a3b8; font-size: 0.9rem; line-height: 1.8;">
+            <li>• Launch High-Intent campaigns first</li>
+            <li>• Monitor CTR and CPC daily</li>
+            <li>• Check GA4 for traffic quality</li>
+          </ul>
+        </div>
+        <div>
+          <p style="color: #64748b; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 10px;">Week 3-4: Refine</p>
+          <ul style="list-style: none; color: #94a3b8; font-size: 0.9rem; line-height: 1.8;">
+            <li>• Pause topics with CTR <1%</li>
+            <li>• Double down on high CTR topics</li>
+            <li>• Test new ad variants</li>
+          </ul>
+        </div>
+      </div>
+
+      <table style="margin-top: 25px;">
+        <tr>
+          <th>Signal</th>
+          <th>Good</th>
+          <th>Action if Low</th>
+        </tr>
+        <tr>
+          <td>CTR</td>
+          <td class="highlight">>2%</td>
+          <td>Improve ad copy, refine topics</td>
+        </tr>
+        <tr>
+          <td>CPC</td>
+          <td class="highlight"><$15 avg</td>
+          <td>Shift budget to efficient topics</td>
+        </tr>
+        <tr>
+          <td>Bounce Rate (GA4)</td>
+          <td class="highlight"><50%</td>
+          <td>Check landing page relevance</td>
+        </tr>
+        <tr>
+          <td>Time on Site (GA4)</td>
+          <td class="highlight">>2 min</td>
+          <td>Traffic is qualified</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Weekly Reporting</div>
+      <p style="color: #94a3b8; margin-bottom: 15px;">Pull these metrics every Monday:</p>
+      <ul class="checklist">
+        <li>Spend by campaign (vs. budget)</li>
+        <li>Impressions, Clicks, CTR, CPC by campaign</li>
+        <li>Top performing topics (by CTR)</li>
+        <li>GA4: Sessions from utm_source=chatgpt</li>
+        <li>GA4: Bounce rate, time on site, pages/session</li>
+        <li>Manual count: Demo requests (ask sales)</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Launch Checklist</div>
+      <ul class="checklist">
+        <li>All campaigns built and in draft</li>
+        <li>UTMs verified on all destination URLs</li>
+        <li>Daily budgets set correctly</li>
+        <li>Ad copy reviewed and approved</li>
+        <li>Landing pages live and tested</li>
+        <li>GA4 segment created for chatgpt traffic</li>
+        <li>Client sign-off received</li>
+        <li>Launch date confirmed</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      Internal use only — Out of Office Media
+    </div>
+  </div>
+</body>
+</html>

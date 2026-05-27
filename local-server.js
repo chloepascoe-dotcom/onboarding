@@ -4,15 +4,105 @@ const path = require('path');
 const { google } = require('googleapis');
 
 const PORT = 8080;
-// Template sheet ID (for reference, but we'll create new ones)
-const TEMPLATE_SPREADSHEET_ID = '1SMGQKvizFBUkWce3yGGFzHYYz913-tjPh1kHtmCAPEA';
+// Shared Drive folder for new onboarding sheets
+const SHARED_DRIVE_FOLDER_ID = '1_a4DqDQ7M7NnA87gJbPJj0UUgydEPAX_';
 const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
+const TEMPLATES_PATH = path.join(__dirname, 'onboarding-templates.json');
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
+
+// Load service templates
+let TEMPLATES;
+try {
+  TEMPLATES = JSON.parse(fs.readFileSync(TEMPLATES_PATH, 'utf8'));
+} catch (e) {
+  console.log('Warning: Could not load onboarding-templates.json');
+  TEMPLATES = null;
+}
+
+// Build Gantt data from template
+function buildGanttFromTemplate(template, clientName, budget, industry, owner, weekDates) {
+  const gantt = [];
+
+  // Header row
+  const header = ['Category', 'Task', 'Owner', 'Assigned To'];
+  for (let i = 0; i < 12; i++) {
+    header.push(`W${i + 1}\n${weekDates[i]}`);
+  }
+  gantt.push(header);
+
+  // Client info row
+  gantt.push([`CLIENT: ${clientName}`, `Budget: $${budget.toLocaleString()}/mo`, industry || '', owner, '', '', '', '', '', '', '', '', '', '', '', '']);
+
+  // Build from template categories
+  for (const category of template.categories) {
+    // Category header row
+    gantt.push([category.name, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+
+    // Tasks
+    for (const task of category.tasks) {
+      const row = ['', task.task, task.owner, task.owner === 'Client' ? 'Client' : owner];
+
+      // Fill in week columns
+      for (let w = 1; w <= 12; w++) {
+        if (task.weeks.includes(w)) {
+          row.push(task.milestone ? 'M' : 'X');
+        } else {
+          row.push('');
+        }
+      }
+      gantt.push(row);
+    }
+  }
+
+  return gantt;
+}
+
+// Build combined access checklist for multiple services
+function buildAccessChecklist(serviceTypes) {
+  const accessItems = new Map();
+
+  // Common items for all services
+  accessItems.set('Google Analytics 4', ['Google Analytics 4', 'analytics@singlegrain.com', 'Editor', 'All', 'Pending', '', '', '']);
+  accessItems.set('Google Tag Manager', ['Google Tag Manager', 'analytics@singlegrain.com', 'Admin', 'All', 'Pending', '', '', '']);
+  accessItems.set('CRM', ['CRM', 'adwords@singlegrain.com', 'Varies', 'All', 'Pending', '', '', '']);
+
+  for (const serviceType of serviceTypes) {
+    if (serviceType === 'paid_media') {
+      accessItems.set('Google Ads', ['Google Ads', 'adwords@singlegrain.com', 'Admin', 'Paid Media', 'Pending', '', '', '']);
+      accessItems.set('Meta Ads', ['Meta Ads', 'Partner ID: 10152546861047072', 'Full Control', 'Paid Media', 'Pending', '', '', '']);
+      accessItems.set('LinkedIn Ads', ['LinkedIn Ads', 'Partner ID: 7186746961612406786', 'Admin', 'Paid Media', 'Pending', '', '', '']);
+      accessItems.set('Microsoft Ads', ['Microsoft Ads', 'adwords@singlegrain.com', 'Super Admin', 'Paid Media', 'Pending', '', '', '']);
+      accessItems.set('TikTok Ads', ['TikTok Ads', 'BC ID: 6998239304547909634', 'Admin', 'Paid Media', 'Pending', '', '', '']);
+    }
+
+    if (serviceType === 'seo_aeo') {
+      accessItems.set('Google Search Console', ['Google Search Console', 'analytics@singlegrain.com', 'Full', 'SEO', 'Pending', '', '', 'Add as property owner']);
+      accessItems.set('CMS Access', ['CMS (WordPress/Webflow/etc)', 'seo@singlegrain.com', 'Editor', 'SEO', 'Pending', '', '', 'Need ability to edit pages']);
+      accessItems.set('Staging Environment', ['Staging/Dev Environment', 'seo@singlegrain.com', 'Access', 'SEO', 'Pending', '', '', 'For testing changes']);
+      accessItems.set('SEO Tools', ['Ahrefs/SEMrush Access', 'analytics@singlegrain.com', 'Varies', 'SEO', 'Pending', '', '', 'If client has existing tools']);
+    }
+
+    if (serviceType === 'creative') {
+      accessItems.set('Brand Assets', ['Google Drive (Brand Assets)', 'creative@singlegrain.com', 'Editor', 'Creative', 'Pending', '', '', 'Logos, fonts, brand guide']);
+      accessItems.set('Design Tool', ['Figma/Design Tool', 'creative@singlegrain.com', 'Editor', 'Creative', 'Pending', '', '', '']);
+      accessItems.set('Stock Images', ['Stock Image Account', 'creative@singlegrain.com', 'Access', 'Creative', 'Pending', '', '', 'If client has Shutterstock/Getty']);
+      accessItems.set('Video Library', ['Video Asset Library', 'creative@singlegrain.com', 'Access', 'Creative', 'Pending', '', '', 'Existing video footage']);
+    }
+  }
+
+  const access = [['Platform', 'Email/ID', 'Access Level', 'Team', 'Status', 'Date Requested', 'Date Confirmed', 'Notes']];
+  for (const item of accessItems.values()) {
+    access.push(item);
+  }
+  return access;
+}
 
 // Track which clients have had research triggered (prevent duplicates)
 const researchTriggered = new Set();
 // Track active clients for access watcher
 const activeClients = new Set();
+// Track client spreadsheet IDs
+const clientSpreadsheets = new Map();
 
 // Send Slack notification
 async function sendSlackNotification(salesData, spreadsheetUrl) {
@@ -298,29 +388,34 @@ async function runResearchAgent(clientName, sheets, spreadsheetId) {
     });
   }
 
-  // Update Gantt chart to mark research as complete
-  const ganttTabName = clientName;
+  // Update Gantt chart to mark research as complete (find first Gantt tab)
   try {
-    const ganttData = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `'${ganttTabName}'!A1:P50`
-    });
+    const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
+    const ganttTab = sheetInfo.data.sheets.find(s => s.properties.title.startsWith(clientName + ' - '));
 
-    const rows = ganttData.data.values || [];
-    for (let i = 0; i < rows.length; i++) {
-      if (rows[i][1] && rows[i][1].includes('Competitor research')) {
-        // Mark as complete by adding ✓
-        await sheets.spreadsheets.values.update({
-          spreadsheetId,
-          range: `'${ganttTabName}'!E${i + 1}`,
-          valueInputOption: 'RAW',
-          requestBody: { values: [['✓']] }
-        });
-        break;
+    if (ganttTab) {
+      const ganttTabName = ganttTab.properties.title;
+      const ganttData = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `'${ganttTabName}'!A1:P50`
+      });
+
+      const rows = ganttData.data.values || [];
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i][1] && rows[i][1].includes('Competitor research')) {
+          // Mark as complete by adding ✓
+          await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `'${ganttTabName}'!E${i + 1}`,
+            valueInputOption: 'RAW',
+            requestBody: { values: [['✓']] }
+          });
+          break;
+        }
       }
     }
   } catch (e) {
-    console.log('Could not update Gantt chart');
+    console.log('Could not update Gantt chart:', e.message);
   }
 
   console.log('✅ Research Agent completed');
@@ -335,6 +430,9 @@ async function runResearchAgent(clientName, sheets, spreadsheetId) {
 async function checkAccessStatus(clientName) {
   if (researchTriggered.has(clientName)) return;
 
+  const spreadsheetId = clientSpreadsheets.get(clientName);
+  if (!spreadsheetId) return;
+
   const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
   const auth = new google.auth.GoogleAuth({
     credentials,
@@ -346,7 +444,7 @@ async function checkAccessStatus(clientName) {
 
   try {
     const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: TEMPLATE_SPREADSHEET_ID,
+      spreadsheetId,
       range: `'${accessTabName}'!E2:E30`
     });
 
@@ -356,7 +454,7 @@ async function checkAccessStatus(clientName) {
     if (allConfirmed) {
       console.log(`\n🎯 All access confirmed for ${clientName}!`);
       researchTriggered.add(clientName);
-      await runResearchAgent(clientName, sheets, TEMPLATE_SPREADSHEET_ID);
+      await runResearchAgent(clientName, sheets, spreadsheetId);
     }
   } catch (e) {
     // Tab might not exist
@@ -375,7 +473,7 @@ function getWeekDates(kickoffDate) {
   return dates;
 }
 
-// Generate onboarding materials
+// Generate onboarding materials (supports multi-service deals)
 async function generateOnboarding(salesData) {
   const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
   const auth = new google.auth.GoogleAuth({
@@ -388,165 +486,231 @@ async function generateOnboarding(salesData) {
   const weekDates = getWeekDates(salesData.kickoff_date);
   const owner = salesData.assigned_owner;
 
+  // Get services from salesData (dashboard sends array, default to paid_media)
+  const serviceTypes = salesData.services && salesData.services.length > 0
+    ? salesData.services
+    : ['paid_media'];
+
+  const serviceNames = serviceTypes.map(st => TEMPLATES?.services[st]?.name || st);
+  const serviceLabel = serviceNames.join(' + ');
+
   console.log(`\n🚀 Generating for: ${salesData.client_name}`);
+  console.log(`📋 Services: ${serviceLabel}`);
 
-  // Use template spreadsheet and add new tabs for this client
-  const SPREADSHEET_ID = TEMPLATE_SPREADSHEET_ID;
-  const clientTabName = `${salesData.client_name}`;
-  const accessTabName = `${salesData.client_name} - Access`;
-
-  // Create new tabs for this client
-  try {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SPREADSHEET_ID,
-      requestBody: {
-        requests: [
-          { addSheet: { properties: { title: clientTabName, index: 0 } } },
-          { addSheet: { properties: { title: accessTabName, index: 1 } } }
-        ]
-      }
-    });
-    console.log(`📄 Created tabs: ${clientTabName}, ${accessTabName}`);
-  } catch (e) {
-    // Tabs might already exist, continue
-    console.log(`📄 Using existing tabs for ${salesData.client_name}`);
-  }
-
-  // Build Gantt data
-  const ganttData = [
-    ['Category', 'Task', 'Owner', 'Assigned To',
-     `W1\n${weekDates[0]}`, `W2\n${weekDates[1]}`, `W3\n${weekDates[2]}`, `W4\n${weekDates[3]}`,
-     `W5\n${weekDates[4]}`, `W6\n${weekDates[5]}`, `W7\n${weekDates[6]}`, `W8\n${weekDates[7]}`,
-     `W9\n${weekDates[8]}`, `W10\n${weekDates[9]}`, `W11\n${weekDates[10]}`, `W12\n${weekDates[11]}`],
-    [`CLIENT: ${salesData.client_name}`, `Budget: $${salesData.monthly_budget.toLocaleString()}/mo`, salesData.industry, owner, '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['ACCESS & SETUP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Request platform access (Google, Meta, LinkedIn, etc.)', 'SG', owner, 'X', '', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Client grants access to all platforms', 'Client', 'Client', 'X', '', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Verify all access confirmed', 'SG', owner, '', 'X', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'CRM access setup & validation', 'Both', 'Both', 'X', 'X', '', '', '', '', '', '', '', '', '', ''],
-    ['TRACKING & ANALYTICS', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Audit existing tracking setup', 'SG', owner, 'X', '', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Create tracking implementation plan', 'SG', owner, 'X', 'X', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Implement/update GTM container', 'SG', owner, '', 'X', 'X', '', '', '', '', '', '', '', '', ''],
-    ['', 'Set up conversion actions (Google, Meta, etc.)', 'SG', owner, '', 'X', 'X', '', '', '', '', '', '', '', '', ''],
-    ['', 'Configure offline conversion import (if CRM)', 'SG', owner, '', '', 'X', 'X', '', '', '', '', '', '', '', ''],
-    ['', 'Validate all tracking fires correctly', 'SG', owner, '', '', 'X', '', '', '', '', '', '', '', '', ''],
-    ['STRATEGY & PLANNING', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Kickoff call', 'Both', 'Both', 'M', '', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Historical performance analysis', 'SG', owner, 'X', 'X', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Competitor research & ad library review', 'SG', owner, 'X', 'X', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Define KPIs, targets, and success metrics', 'Both', 'Both', '', 'X', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Develop campaign strategy & structure', 'SG', owner, '', 'X', 'X', '', '', '', '', '', '', '', '', ''],
-    ['', 'Strategy presentation & approval', 'Both', 'Both', '', '', 'M', '', '', '', '', '', '', '', '', ''],
-    ['CAMPAIGN BUILD', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Create campaign naming conventions', 'SG', owner, '', 'X', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Build campaign structure (Google)', 'SG', owner, '', '', 'X', 'X', '', '', '', '', '', '', '', ''],
-    ['', 'Build campaign structure (Meta)', 'SG', owner, '', '', 'X', 'X', '', '', '', '', '', '', '', ''],
-    ['', 'Build campaign structure (LinkedIn/Other)', 'SG', owner, '', '', '', 'X', 'X', '', '', '', '', '', '', ''],
-    ['', 'Write ad copy (all platforms)', 'SG', owner, '', '', 'X', 'X', '', '', '', '', '', '', '', ''],
-    ['', 'Request creative assets from Creative team', 'SG', owner, '', '', 'X', '', '', '', '', '', '', '', '', ''],
-    ['', 'Upload creatives and finalize ads', 'SG', owner, '', '', '', 'X', '', '', '', '', '', '', '', ''],
-    ['', 'QA all campaigns before launch', 'SG', owner, '', '', '', 'X', '', '', '', '', '', '', '', ''],
-    ['LAUNCH & OPTIMIZATION', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Pre-launch checklist complete', 'SG', owner, '', '', '', 'M', '', '', '', '', '', '', '', ''],
-    ['', 'Launch campaigns', 'SG', owner, '', '', '', '', 'M', '', '', '', '', '', '', ''],
-    ['', 'Day 1-3 monitoring & adjustments', 'SG', owner, '', '', '', '', 'X', '', '', '', '', '', '', ''],
-    ['', 'Week 1 performance review', 'Both', 'Both', '', '', '', '', '', 'X', '', '', '', '', '', ''],
-    ['', 'Ongoing optimization (bids, budgets, audiences)', 'SG', owner, '', '', '', '', '', 'X', 'X', 'X', 'X', 'X', 'X', 'X'],
-    ['', 'A/B testing (copy, creative, audiences)', 'SG', owner, '', '', '', '', '', '', 'X', 'X', 'X', 'X', 'X', 'X'],
-    ['REPORTING & COMMUNICATION', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-    ['', 'Set up reporting dashboard', 'SG', owner, '', '', 'X', 'X', '', '', '', '', '', '', '', ''],
-    ['', 'Weekly status calls', 'Both', 'Both', '', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M'],
-    ['', 'Month 1 performance report', 'SG', owner, '', '', '', 'M', '', '', '', '', '', '', '', ''],
-    ['', 'Month 2 performance report', 'SG', owner, '', '', '', '', '', '', '', 'M', '', '', '', ''],
-    ['', '90-day review & strategy refresh', 'Both', 'Both', '', '', '', '', '', '', '', '', '', '', '', 'M'],
-  ];
-
-  // Write to client's Gantt tab
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `'${clientTabName}'!A1`,
-    valueInputOption: 'RAW',
-    requestBody: { values: ganttData }
+  // Create new spreadsheet in Shared Drive folder
+  const file = await drive.files.create({
+    supportsAllDrives: true,
+    requestBody: {
+      name: `Onboarding - ${salesData.client_name} (${serviceLabel})`,
+      mimeType: 'application/vnd.google-apps.spreadsheet',
+      parents: [SHARED_DRIVE_FOLDER_ID]
+    }
   });
 
-  // Access Checklist (from onboarding-access-checklist.csv)
-  const accessData = [
-    ['Platform', 'Email/ID to Add', 'Access Level', 'Team', 'Status', 'Date Requested', 'Date Confirmed', 'Notes'],
-    ['Google Analytics 4', 'analytics@singlegrain.com', 'Editor', 'All', 'Pending', '', '', ''],
-    ['Google Analytics 4', 'adwords@singlegrain.com', 'Editor', 'All', 'Pending', '', '', ''],
-    ['Google Tag Manager', 'analytics@singlegrain.com', 'Admin + Publish', 'All', 'Pending', '', '', ''],
-    ['Google Tag Manager', 'adwords@singlegrain.com', 'Admin + Publish', 'All', 'Pending', '', '', ''],
-    ['Google Search Console', 'analytics@singlegrain.com', 'Full', 'SEO', 'Pending', '', '', ''],
-    ['Google Ads', 'adwords@singlegrain.com', 'Admin', 'Paid Media', 'Pending', '', '', 'Provide Customer ID: XXX-XXX-XXXX'],
-    ['Google Merchant Center', 'analytics@singlegrain.com', 'Admin', 'Paid Media', 'Pending', '', '', 'For ecommerce only'],
-    ['Meta Ads (Ad Account)', 'Partner ID: 10152546861047072', 'Full Control', 'Paid Media', 'Pending', '', '', ''],
-    ['Meta Ads (Page)', 'Partner ID: 10152546861047072', 'Full Control', 'Paid Media', 'Pending', '', '', ''],
-    ['Meta Ads (Pixel)', 'Partner ID: 10152546861047072', 'Full Control', 'Paid Media', 'Pending', '', '', ''],
-    ['Meta Ads (Instagram)', 'Partner ID: 10152546861047072', 'Full Control', 'Paid Media', 'Pending', '', '', ''],
-    ['LinkedIn Ads', 'Partner ID: 7186746961612406786', 'Admin', 'Paid Media', 'Pending', '', '', 'Need both Ad Account + Page access'],
-    ['Microsoft (Bing) Ads', 'adwords@singlegrain.com', 'Super Admin', 'Paid Media', 'Pending', '', '', ''],
-    ['TikTok Ads', 'BC ID: 6998239304547909634', 'Admin', 'Paid Media', 'Pending', '', '', ''],
-    ['Pinterest Ads', 'Biz ID: 794322590436195524', 'Partner', 'Paid Media', 'Pending', '', '', ''],
-    ['Snapchat Ads', 'adwords@singlegrain.com', 'Business Admin + Account Admin', 'Paid Media', 'Pending', '', '', 'Two-step: Org then Ad Account'],
-    ['Reddit Ads', 'adwords@singlegrain.com', 'Administrator', 'Paid Media', 'Pending', '', '', ''],
-    ['X (Twitter) Ads', '@singlegrain', 'Ad Manager', 'Paid Media', 'Pending', '', '', ''],
-    ['Amazon Ads', 'adwords@singlegrain.com', 'Admin', 'Paid Media', 'Pending', '', '', 'Vendor or Seller Central'],
-    ['Apple Search Ads', 'analytics@singlegrain.com', 'Admin', 'Paid Media', 'Pending', '', '', ''],
-    ['Shopify', 'operations@singlegrain.com', 'Full Permissions', 'Ecommerce', 'Pending', '', '', ''],
-    ['CRM (HubSpot/Salesforce/etc)', 'adwords@singlegrain.com', 'Varies', 'All', 'Pending', '', '', 'For offline conversion tracking'],
-  ];
+  const SPREADSHEET_ID = file.data.id;
+  console.log(`📄 Created sheet: Onboarding - ${salesData.client_name} (${serviceLabel})`);
 
-  try {
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `'${accessTabName}'!A1`,
-      valueInputOption: 'RAW',
-      requestBody: { values: accessData }
-    });
-  } catch (e) {
-    console.log('Access Checklist tab not found');
-  }
+  const accessTabName = `${salesData.client_name} - Access`;
+  const kickoffTabName = `${salesData.client_name} - Kickoff`;
 
-  // Apply formatting
+  // Get first sheet ID to rename it
   const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
-  const ganttSheet = sheetMeta.data.sheets.find(s => s.properties.title === clientTabName);
-  if (!ganttSheet) {
-    console.log('⚠️ Could not find sheet for formatting');
-    return { success: true, spreadsheet_url: `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/edit` };
+  const firstSheetId = sheetMeta.data.sheets[0].properties.sheetId;
+
+  // Build tab creation requests - one Gantt tab per service + Access
+  const tabRequests = [];
+
+  // Rename first sheet to first service's Gantt
+  const firstServiceName = TEMPLATES?.services[serviceTypes[0]]?.name || serviceTypes[0];
+  const firstGanttTab = `${salesData.client_name} - ${firstServiceName}`;
+  tabRequests.push({ updateSheetProperties: { properties: { sheetId: firstSheetId, title: firstGanttTab }, fields: 'title' } });
+
+  // Add additional service Gantt tabs
+  for (let i = 1; i < serviceTypes.length; i++) {
+    const svcName = TEMPLATES?.services[serviceTypes[i]]?.name || serviceTypes[i];
+    const ganttTab = `${salesData.client_name} - ${svcName}`;
+    tabRequests.push({ addSheet: { properties: { title: ganttTab, index: i } } });
   }
-  const sheetId = ganttSheet.properties.sheetId;
+
+  // Add Access and Kickoff tabs
+  tabRequests.push({ addSheet: { properties: { title: accessTabName, index: serviceTypes.length } } });
+  tabRequests.push({ addSheet: { properties: { title: kickoffTabName, index: serviceTypes.length + 1 } } });
 
   await sheets.spreadsheets.batchUpdate({
     spreadsheetId: SPREADSHEET_ID,
-    requestBody: {
-      requests: [
+    requestBody: { requests: tabRequests }
+  });
+
+  // Create a Gantt tab for each service
+  for (let i = 0; i < serviceTypes.length; i++) {
+    const serviceType = serviceTypes[i];
+    const template = TEMPLATES?.services[serviceType];
+    const svcName = template?.name || serviceType;
+    const ganttTabName = `${salesData.client_name} - ${svcName}`;
+
+    let gantt;
+    if (template) {
+      gantt = buildGanttFromTemplate(template, salesData.client_name, salesData.monthly_budget, salesData.industry, owner, weekDates);
+    } else {
+      // Fallback to basic gantt if templates not loaded
+      gantt = [
+        ['Category', 'Task', 'Owner', 'Assigned To', `W1\n${weekDates[0]}`, `W2\n${weekDates[1]}`, `W3\n${weekDates[2]}`, `W4\n${weekDates[3]}`, `W5\n${weekDates[4]}`, `W6\n${weekDates[5]}`, `W7\n${weekDates[6]}`, `W8\n${weekDates[7]}`, `W9\n${weekDates[8]}`, `W10\n${weekDates[9]}`, `W11\n${weekDates[10]}`, `W12\n${weekDates[11]}`],
+        [`CLIENT: ${salesData.client_name}`, `Budget: $${salesData.monthly_budget.toLocaleString()}/mo`, salesData.industry || '', owner, '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['ACCESS & SETUP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['', 'Request platform access', 'SG', owner, 'X', '', '', '', '', '', '', '', '', '', '', ''],
+        ['', 'Client grants access', 'Client', 'Client', 'X', '', '', '', '', '', '', '', '', '', '', ''],
+        ['STRATEGY & PLANNING', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['', 'Kickoff call', 'Both', 'Both', 'M', '', '', '', '', '', '', '', '', '', '', ''],
+        ['', 'Strategy presentation', 'Both', 'Both', '', '', 'M', '', '', '', '', '', '', '', '', ''],
+        ['EXECUTION', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['', 'Launch', 'SG', owner, '', '', '', '', 'M', '', '', '', '', '', '', ''],
+        ['', 'Ongoing work', 'SG', owner, '', '', '', '', '', 'X', 'X', 'X', 'X', 'X', 'X', 'X'],
+        ['REPORTING', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['', 'Weekly status calls', 'Both', 'Both', '', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M'],
+        ['', '90-day review', 'Both', 'Both', '', '', '', '', '', '', '', '', '', '', '', 'M'],
+      ];
+    }
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `'${ganttTabName}'!A1`,
+      valueInputOption: 'RAW',
+      requestBody: { values: gantt }
+    });
+
+    console.log(`📊 Created Gantt: ${ganttTabName}`);
+  }
+
+  // Combined access checklist for all services
+  const accessData = buildAccessChecklist(serviceTypes);
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `'${accessTabName}'!A1`,
+    valueInputOption: 'RAW',
+    requestBody: { values: accessData }
+  });
+
+  // Kickoff Call Questions
+  const kickoffQuestions = [
+    ['', '', ''],
+    ['KICKOFF CALL QUESTIONS', '', ''],
+    ['Client: ' + salesData.client_name, 'Industry: ' + (salesData.industry || 'N/A'), 'Budget: $' + salesData.monthly_budget.toLocaleString() + '/mo'],
+    ['', '', ''],
+    ['PAID MEDIA ACCOUNTS & HISTORY', '', ''],
+    ['', '', ''],
+    ['Question', 'Notes', 'Follow-up'],
+    ['Which platforms are you currently running ads on?', '', ''],
+    ['How long have these accounts been active?', '', ''],
+    ['Who has been managing the accounts (in-house, agency, freelancer)?', '', ''],
+    ['What is your current monthly spend across all platforms?', '', ''],
+    ['What has been working well in your paid media efforts?', '', ''],
+    ['What has NOT been working or where are you seeing challenges?', '', ''],
+    ['Are there any campaigns or strategies you have tried and want to avoid?', '', ''],
+    ['Do you have historical performance data we can review? (last 6-12 months)', '', ''],
+    ['', '', ''],
+    ['GOALS & SUCCESS METRICS', '', ''],
+    ['', '', ''],
+    ['Question', 'Notes', 'Follow-up'],
+    ['What is the primary goal for paid media? (leads, sales, awareness, other)', '', ''],
+    ['What does success look like in 90 days?', '', ''],
+    ['What are your target KPIs? (CPA, ROAS, CPL, etc.)', '', ''],
+    ['What is an acceptable cost per acquisition/lead?', '', ''],
+    ['Do you have a specific ROAS target?', '', ''],
+    ['Are there seasonal trends we should plan around?', '', ''],
+    ['', '', ''],
+    ['AUDIENCE & TARGETING', '', ''],
+    ['', '', ''],
+    ['Question', 'Notes', 'Follow-up'],
+    ['Who is your ideal customer? (demographics, job titles, industries)', '', ''],
+    ['What problems does your product/service solve for them?', '', ''],
+    ['Are there customer segments that are more valuable than others?', '', ''],
+    ['Who are your top 3 competitors?', '', ''],
+    ['What differentiates you from competitors?', '', ''],
+    ['', '', ''],
+    ['CREATIVE & MESSAGING', '', ''],
+    ['', '', ''],
+    ['Question', 'Notes', 'Follow-up'],
+    ['What messaging or value props resonate most with your audience?', '', ''],
+    ['Do you have existing creative assets we can use? (images, videos)', '', ''],
+    ['Are there brand guidelines we need to follow?', '', ''],
+    ['What is the approval process for ad creative?', '', ''],
+    ['', '', ''],
+    ['TRACKING & ATTRIBUTION', '', ''],
+    ['', '', ''],
+    ['Question', 'Notes', 'Follow-up'],
+    ['What CRM/marketing automation do you use?', '', ''],
+    ['How do you currently track conversions?', '', ''],
+    ['Can we get access to your CRM for offline conversion tracking?', '', ''],
+    ['', '', ''],
+    ['WORKING RELATIONSHIP', '', ''],
+    ['', '', ''],
+    ['Question', 'Notes', 'Follow-up'],
+    ['Who is the main point of contact for day-to-day questions?', '', ''],
+    ['Who are the key stakeholders and decision-makers?', '', ''],
+    ['What is your preferred communication style? (Slack, email, calls)', '', ''],
+    ['What cadence works best for status updates? (weekly, bi-weekly)', '', ''],
+    ['What does the ideal agency partnership look like for you?', '', ''],
+  ];
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `'${kickoffTabName}'!A1`,
+    valueInputOption: 'RAW',
+    requestBody: { values: kickoffQuestions }
+  });
+
+  console.log('📋 Created Kickoff Questions tab');
+
+  // Get updated sheet metadata for formatting
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
+
+  // Format ALL Gantt tabs
+  const formatRequests = [];
+  for (const serviceType of serviceTypes) {
+    const svcName = TEMPLATES?.services[serviceType]?.name || serviceType;
+    const ganttTabName = `${salesData.client_name} - ${svcName}`;
+    const ganttSheet = meta.data.sheets.find(s => s.properties.title === ganttTabName);
+
+    if (ganttSheet) {
+      const sheetId = ganttSheet.properties.sheetId;
+      formatRequests.push(
         { updateSheetProperties: { properties: { sheetId, gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
         { repeatCell: { range: { sheetId, startRowIndex: 0, endRowIndex: 1 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.3, blue: 0.5 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 }, fontSize: 10 }, horizontalAlignment: 'CENTER', verticalAlignment: 'MIDDLE', wrapStrategy: 'WRAP' } }, fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment,wrapStrategy)' } },
         { repeatCell: { range: { sheetId, startRowIndex: 1, endRowIndex: 2 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.85, green: 0.92, blue: 1 }, textFormat: { bold: true, fontSize: 11 } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } },
-        ...[2, 7, 14, 21, 30, 37].map(row => ({ repeatCell: { range: { sheetId, startRowIndex: row, endRowIndex: row + 1 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 }, textFormat: { bold: true, fontSize: 10 } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } })),
         { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 180 }, fields: 'pixelSize' } },
         { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 }, properties: { pixelSize: 320 }, fields: 'pixelSize' } },
         { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 2, endIndex: 3 }, properties: { pixelSize: 70 }, fields: 'pixelSize' } },
         { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 3, endIndex: 4 }, properties: { pixelSize: 120 }, fields: 'pixelSize' } },
         { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 4, endIndex: 16 }, properties: { pixelSize: 65 }, fields: 'pixelSize' } },
         { repeatCell: { range: { sheetId, startRowIndex: 1, startColumnIndex: 4, endColumnIndex: 16 }, cell: { userEnteredFormat: { horizontalAlignment: 'CENTER' } }, fields: 'userEnteredFormat(horizontalAlignment)' } },
-        { updateDimensionProperties: { range: { sheetId, dimension: 'ROWS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 45 }, fields: 'pixelSize' } },
-      ]
+        { updateDimensionProperties: { range: { sheetId, dimension: 'ROWS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 45 }, fields: 'pixelSize' } }
+      );
     }
-  });
+  }
 
-  console.log('✅ Generated successfully');
-  const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/edit#gid=${sheetId}`;
+  if (formatRequests.length > 0) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SPREADSHEET_ID,
+      requestBody: { requests: formatRequests }
+    });
+  }
+
+  console.log('✅ Gantt & Access tabs generated');
+
+  // Generate Research tab immediately (no waiting for access)
+  await runResearchAgent(salesData.client_name, sheets, SPREADSHEET_ID);
+
+  const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/edit#gid=${firstSheetId}`;
 
   // Send Slack notification
   await sendSlackNotification(salesData, spreadsheetUrl);
 
-  // Add to active clients for access watcher
-  activeClients.add(salesData.client_name);
-  console.log(`👀 Now watching access status for: ${salesData.client_name}`);
+  // Track client spreadsheet
+  clientSpreadsheets.set(salesData.client_name, SPREADSHEET_ID);
 
-  return { success: true, spreadsheet_url: spreadsheetUrl };
+  console.log('✅ All tabs generated successfully');
+  return { success: true, spreadsheet_url: spreadsheetUrl, spreadsheet_id: SPREADSHEET_ID, services: serviceNames };
 }
 
 // Simple HTTP server
@@ -584,7 +748,10 @@ const server = http.createServer(async (req, res) => {
     req.on('data', chunk => body += chunk);
     req.on('end', async () => {
       try {
-        const { client_name } = JSON.parse(body);
+        const { client_name, spreadsheet_id } = JSON.parse(body);
+        const sheetId = spreadsheet_id || clientSpreadsheets.get(client_name);
+        if (!sheetId) throw new Error('No spreadsheet found for client');
+
         const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
         const auth = new google.auth.GoogleAuth({
           credentials,
@@ -592,7 +759,7 @@ const server = http.createServer(async (req, res) => {
         });
         const sheets = google.sheets({ version: 'v4', auth });
 
-        await runResearchAgent(client_name, sheets, TEMPLATE_SPREADSHEET_ID);
+        await runResearchAgent(client_name, sheets, sheetId);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: 'Research completed' }));
       } catch (err) {
@@ -610,7 +777,10 @@ const server = http.createServer(async (req, res) => {
     req.on('data', chunk => body += chunk);
     req.on('end', async () => {
       try {
-        const { client_name } = JSON.parse(body);
+        const { client_name, spreadsheet_id } = JSON.parse(body);
+        const sheetId = spreadsheet_id || clientSpreadsheets.get(client_name);
+        if (!sheetId) throw new Error('No spreadsheet found for client');
+
         const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
         const auth = new google.auth.GoogleAuth({
           credentials,
@@ -624,7 +794,7 @@ const server = http.createServer(async (req, res) => {
         // Update all statuses to Confirmed
         const confirmValues = Array(22).fill(['Confirmed', today, today]);
         await sheets.spreadsheets.values.update({
-          spreadsheetId: TEMPLATE_SPREADSHEET_ID,
+          spreadsheetId: sheetId,
           range: `'${accessTabName}'!E2:G23`,
           valueInputOption: 'RAW',
           requestBody: { values: confirmValues }
@@ -636,7 +806,7 @@ const server = http.createServer(async (req, res) => {
         researchTriggered.add(client_name);
 
         // Trigger research agent automatically
-        await runResearchAgent(client_name, sheets, TEMPLATE_SPREADSHEET_ID);
+        await runResearchAgent(client_name, sheets, sheetId);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: 'Access confirmed and research triggered' }));

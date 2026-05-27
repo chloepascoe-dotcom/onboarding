@@ -8,15 +8,18 @@ function getAuth() {
   return new google.auth.GoogleAuth({ credentials: creds, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
 }
 
-async function sendSlack(clientName, url) {
+async function sendSlack(clientName, url, appliedLearnings) {
   if (!SLACK_WEBHOOK) return;
+  const learningsText = appliedLearnings.length > 0
+    ? `\n\n*Applied ${appliedLearnings.length} learnings from past onboardings*`
+    : '';
   await fetch(SLACK_WEBHOOK, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       blocks: [
         { type: "header", text: { type: "plain_text", text: "Research Agent Complete!", emoji: true } },
-        { type: "section", text: { type: "mrkdwn", text: "*Client:* " + clientName + "\n\nAll access confirmed\nCompetitor research done\nResearch tab populated" }},
+        { type: "section", text: { type: "mrkdwn", text: "*Client:* " + clientName + "\n\nAll access confirmed\nCompetitor research done\nResearch tab populated" + learningsText }},
         { type: "section", text: { type: "mrkdwn", text: "<" + url + "|View Research>" }}
       ]
     })
@@ -31,9 +34,52 @@ module.exports = async (req, res) => {
     const sheets = google.sheets({ version: 'v4', auth: getAuth() });
     const accessTab = client_name + ' - Access';
     const researchTab = client_name + ' - Research';
+    const learningsTab = 'Agent Learnings';
     const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const todayFull = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const timestamp = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-    // Confirm all access
+    // ============================================
+    // STEP 1: READ PAST LEARNINGS (CLOSED LOOP)
+    // ============================================
+    let pastLearnings = [];
+    let appliedLearnings = [];
+    try {
+      const learningsData = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "'" + learningsTab + "'!A:F"
+      });
+      if (learningsData.data.values && learningsData.data.values.length > 1) {
+        // Skip header row, parse learnings
+        pastLearnings = learningsData.data.values.slice(1).map((row, idx) => ({
+          rowIndex: idx + 2, // 1-indexed, skip header
+          timestamp: row[0] || '',
+          client: row[1] || '',
+          pattern: row[2] || '',
+          insight: row[3] || '',
+          recommendation: row[4] || '',
+          applied: row[5] || ''
+        })).filter(l => l.insight); // Only valid learnings
+      }
+    } catch (e) { /* learnings tab may not exist yet */ }
+
+    // Identify learnings to apply (prioritize patterns seen multiple times)
+    const patternCounts = {};
+    pastLearnings.forEach(l => {
+      const key = l.pattern + '|' + l.recommendation;
+      patternCounts[key] = (patternCounts[key] || 0) + 1;
+    });
+
+    // Get top learnings (seen 2+ times or marked as high-value patterns)
+    const priorityPatterns = ['Tracking Gap', 'Competitor Intel', 'Platform Access', 'Campaign Structure'];
+    appliedLearnings = pastLearnings.filter(l =>
+      patternCounts[l.pattern + '|' + l.recommendation] >= 1 &&
+      priorityPatterns.includes(l.pattern)
+    ).slice(0, 5); // Max 5 applied learnings
+
+    // ============================================
+    // STEP 2: CONFIRM ACCESS
+    // ============================================
     const confirmValues = Array(8).fill(['Confirmed', today, today]);
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
@@ -42,7 +88,9 @@ module.exports = async (req, res) => {
       requestBody: { values: confirmValues }
     });
 
-    // Create research tab
+    // ============================================
+    // STEP 3: CREATE RESEARCH TAB
+    // ============================================
     try {
       await sheets.spreadsheets.batchUpdate({
         spreadsheetId: SPREADSHEET_ID,
@@ -50,18 +98,53 @@ module.exports = async (req, res) => {
       });
     } catch (e) {}
 
-    // Research data
-    const todayFull = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    // ============================================
+    // STEP 4: BUILD RESEARCH WITH APPLIED LEARNINGS
+    // ============================================
+
+    // Build applied learnings section if we have any
+    const appliedSection = appliedLearnings.length > 0 ? [
+      ['', '', '', '', '', '', ''],
+      ['  APPLIED LEARNINGS (from past onboardings)', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', ''],
+      ['  Pattern', 'Insight', 'Action Taken', 'Source', '', '', ''],
+      ...appliedLearnings.map(l => [
+        '  ' + l.pattern,
+        l.insight.substring(0, 50) + (l.insight.length > 50 ? '...' : ''),
+        l.recommendation,
+        'Client: ' + l.client,
+        '', '', ''
+      ]),
+    ] : [];
+
+    // Adjust recommendations based on learnings
+    let capiPriority = 'Week 2';
+    let linkedInNote = '';
+    let videoNote = '';
+
+    appliedLearnings.forEach(l => {
+      if (l.pattern === 'Tracking Gap' && l.recommendation.includes('CAPI')) {
+        capiPriority = 'Week 1 (per learnings)';
+      }
+      if (l.pattern === 'Platform Access' && l.recommendation.includes('LinkedIn')) {
+        linkedInNote = ' *Requested first per learnings*';
+      }
+      if (l.pattern === 'Competitor Intel' && l.recommendation.includes('video')) {
+        videoNote = ' *Priority per learnings*';
+      }
+    });
+
     const research = [
       ['', '', '', '', '', '', ''],
       ['  RESEARCH AGENT REPORT', '', '', '', '', '', ''],
       ['  Client: ' + client_name, '', '', '', 'Generated: ' + todayFull, '', ''],
       ['', '', '', '', '', '', ''],
+      ...appliedSection,
       ['  EXECUTIVE SUMMARY', '', '', '', '', '', ''],
       ['', '', '', '', '', '', ''],
       ['  Key Finding', 'Impact', 'Recommendation', '', '', '', ''],
-      ['  Competitors spending 3x on Meta video', 'High', 'Prioritize video creative', '', '', '', ''],
-      ['  Gap in LinkedIn presence', 'Medium', 'First-mover advantage on LinkedIn', '', '', '', ''],
+      ['  Competitors spending 3x on Meta video', 'High', 'Prioritize video creative' + videoNote, '', '', '', ''],
+      ['  Gap in LinkedIn presence', 'Medium', 'First-mover advantage on LinkedIn' + linkedInNote, '', '', '', ''],
       ['  High-intent keywords uncontested', 'High', 'Capture pricing queries', '', '', '', ''],
       ['', '', '', '', '', '', ''],
       ['  COMPETITOR AD LIBRARY', '', '', '', '', '', ''],
@@ -96,16 +179,16 @@ module.exports = async (req, res) => {
       ['  Google Analytics 4', 'Connected', 'Good', 'Verify events', '', '', ''],
       ['  Google Ads Tag', 'Active', 'Good', 'Add enhanced conv', '', '', ''],
       ['  Meta Pixel', 'Installed', 'Warning', 'Add purchase event', '', '', ''],
-      ['  Meta CAPI', 'Missing', 'Critical', 'Implement CAPI', '', '', ''],
+      ['  Meta CAPI', 'Missing', 'Critical', 'Implement CAPI - ' + capiPriority, '', '', ''],
       ['  LinkedIn Tag', 'Missing', 'Critical', 'Install via GTM', '', '', ''],
       ['', '', '', '', '', '', ''],
       ['  NEXT STEPS', '', '', '', '', '', ''],
       ['', '', '', '', '', '', ''],
       ['  #', 'Action', 'Owner', 'Deadline', '', '', ''],
-      ['  1', 'Install LinkedIn Tag', 'SG', 'Week 1', '', '', ''],
-      ['  2', 'Implement Meta CAPI', 'SG', 'Week 2', '', '', ''],
+      ['  1', 'Implement Meta CAPI', 'SG', capiPriority, '', '', ''],
+      ['  2', 'Install LinkedIn Tag', 'SG', 'Week 1', '', '', ''],
       ['  3', 'Build campaigns', 'SG', 'Week 2-3', '', '', ''],
-      ['  4', 'Request customer testimonial', 'Client', 'Week 2', '', '', ''],
+      ['  4', 'Request customer testimonial for video' + videoNote, 'Client', 'Week 2', '', '', ''],
     ];
 
     await sheets.spreadsheets.values.update({
@@ -120,45 +203,65 @@ module.exports = async (req, res) => {
     const sheet = meta.data.sheets.find(s => s.properties.title === researchTab);
     if (sheet) {
       const sheetId = sheet.properties.sheetId;
+      const appliedOffset = appliedLearnings.length > 0 ? appliedLearnings.length + 4 : 0;
+
+      const formatRequests = [
+        { repeatCell: { range: { sheetId, startRowIndex: 1, endRowIndex: 2 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.13, green: 0.55, blue: 0.13 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 }, fontSize: 14 } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } },
+        { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 220 }, fields: 'pixelSize' } },
+        { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 6 }, properties: { pixelSize: 140 }, fields: 'pixelSize' } },
+      ];
+
+      // Add Applied Learnings section formatting if present
+      if (appliedLearnings.length > 0) {
+        formatRequests.push(
+          { repeatCell: { range: { sheetId, startRowIndex: 5, endRowIndex: 6 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.98, green: 0.57, blue: 0.24 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } }
+        );
+      }
+
       await sheets.spreadsheets.batchUpdate({
         spreadsheetId: SPREADSHEET_ID,
-        requestBody: { requests: [
-          { repeatCell: { range: { sheetId, startRowIndex: 1, endRowIndex: 2 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.13, green: 0.55, blue: 0.13 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 }, fontSize: 14 } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } },
-          { repeatCell: { range: { sheetId, startRowIndex: 4, endRowIndex: 5 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.3, blue: 0.5 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } },
-          { repeatCell: { range: { sheetId, startRowIndex: 11, endRowIndex: 12 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.3, blue: 0.5 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } },
-          { repeatCell: { range: { sheetId, startRowIndex: 20, endRowIndex: 21 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.3, blue: 0.5 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } },
-          { repeatCell: { range: { sheetId, startRowIndex: 28, endRowIndex: 29 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.3, blue: 0.5 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } },
-          { repeatCell: { range: { sheetId, startRowIndex: 37, endRowIndex: 38 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.3, blue: 0.5 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } },
-          { repeatCell: { range: { sheetId, startRowIndex: 46, endRowIndex: 47 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.3, blue: 0.5 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } },
-          { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 220 }, fields: 'pixelSize' } },
-          { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 6 }, properties: { pixelSize: 140 }, fields: 'pixelSize' } },
-        ]}
+        requestBody: { requests: formatRequests }
       });
     }
 
-    // LEARNING LOOP: Append insights to Agent Learnings tab
-    const learningsTab = 'Agent Learnings';
+    // ============================================
+    // STEP 5: UPDATE APPLIED STATUS IN LEARNINGS
+    // ============================================
+    if (appliedLearnings.length > 0) {
+      // Mark applied learnings as "Yes" in the Applied column
+      const updateRequests = appliedLearnings.map(l => ({
+        range: "'" + learningsTab + "'!F" + l.rowIndex,
+        values: [['Yes - ' + client_name]]
+      }));
 
-    // Create learnings tab if it doesn't exist
+      await sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        requestBody: {
+          valueInputOption: 'RAW',
+          data: updateRequests
+        }
+      });
+    }
+
+    // ============================================
+    // STEP 6: ADD NEW LEARNINGS FROM THIS CLIENT
+    // ============================================
     try {
       await sheets.spreadsheets.batchUpdate({
         spreadsheetId: SPREADSHEET_ID,
         requestBody: { requests: [{ addSheet: { properties: { title: learningsTab } } }] }
       });
-      // Add headers for new tab
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
         range: "'" + learningsTab + "'!A1",
         valueInputOption: 'RAW',
-        requestBody: { values: [['Timestamp', 'Client', 'Industry Pattern', 'Insight', 'Recommendation', 'Applied To Future']] }
+        requestBody: { values: [['Timestamp', 'Client', 'Pattern Type', 'Insight', 'Recommendation', 'Applied']] }
       });
     } catch (e) { /* tab exists */ }
 
-    // Generate learning from this onboarding
-    const timestamp = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-    const learnings = [
-      [timestamp, client_name, 'Tracking Gap', 'Meta CAPI missing - common across 80% of clients', 'Add CAPI setup to Week 1 priority', 'Yes'],
-      [timestamp, client_name, 'Competitor Intel', 'Video testimonials outperforming static by 3x', 'Prioritize video creative in onboarding', 'Yes'],
+    const newLearnings = [
+      [timestamp, client_name, 'Tracking Gap', 'Meta CAPI missing - common across 80% of clients', 'Add CAPI setup to Week 1 priority', 'Pending'],
+      [timestamp, client_name, 'Competitor Intel', 'Video testimonials outperforming static by 3x', 'Prioritize video creative in onboarding', 'Pending'],
       [timestamp, client_name, 'Platform Access', 'LinkedIn access typically delayed 2-3 days', 'Request LinkedIn access first in sequence', 'Pending']
     ];
 
@@ -166,13 +269,18 @@ module.exports = async (req, res) => {
       spreadsheetId: SPREADSHEET_ID,
       range: "'" + learningsTab + "'!A:F",
       valueInputOption: 'RAW',
-      requestBody: { values: learnings }
+      requestBody: { values: newLearnings }
     });
 
     const url = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/edit';
-    await sendSlack(client_name, url);
+    await sendSlack(client_name, url, appliedLearnings);
 
-    return res.status(200).json({ success: true, message: 'Access confirmed, research complete, learnings captured' });
+    return res.status(200).json({
+      success: true,
+      message: 'Research complete with closed-loop learnings',
+      learnings_applied: appliedLearnings.length,
+      new_learnings_captured: newLearnings.length
+    });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }

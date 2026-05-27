@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proactive Client Management</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+    .slide {
+      min-height: 100vh;
+      padding: 60px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .slide-title {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+    }
+    .slide-title h1 {
+      font-size: 3.5rem;
+      font-weight: 300;
+      margin-bottom: 20px;
+    }
+    .slide-title h1 span {
+      color: #60a5fa;
+      font-weight: 600;
+    }
+    .slide-title p {
+      color: #94a3b8;
+      font-size: 1.2rem;
+    }
+    h2 {
+      font-size: 2.2rem;
+      font-weight: 300;
+      margin-bottom: 40px;
+      color: #fff;
+    }
+    h2 span {
+      color: #60a5fa;
+      font-weight: 600;
+    }
+    h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #60a5fa;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-top: 20px;
+    }
+    .reactive {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 16px;
+      padding: 30px;
+    }
+    .reactive h3 {
+      color: #f87171;
+    }
+    .proactive {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 16px;
+      padding: 30px;
+    }
+    .proactive h3 {
+      color: #4ade80;
+    }
+    ul {
+      list-style: none;
+    }
+    li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: #cbd5e1;
+    }
+    li:last-child {
+      border-bottom: none;
+    }
+    .example-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 25px;
+      margin: 20px 0;
+    }
+    .example-box .label {
+      font-size: 0.8rem;
+      color: #60a5fa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .quote {
+      font-size: 1.4rem;
+      font-style: italic;
+      color: #94a3b8;
+      border-left: 3px solid #60a5fa;
+      padding-left: 25px;
+      margin: 30px 0;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+      margin-top: 30px;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 25px;
+    }
+    .card h4 {
+      color: #60a5fa;
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+    .card p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+    .number {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #60a5fa;
+      opacity: 0.3;
+      margin-bottom: 10px;
+    }
+    .action-list {
+      margin-top: 30px;
+    }
+    .action-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .action-item:last-child {
+      border-bottom: none;
+    }
+    .action-icon {
+      width: 50px;
+      height: 50px;
+      background: rgba(96, 165, 250, 0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .action-content h4 {
+      color: #fff;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+    .action-content p {
+      color: #94a3b8;
+    }
+    .highlight {
+      background: linear-gradient(135deg, rgba(96,165,250,0.15) 0%, rgba(96,165,250,0.05) 100%);
+      border: 1px solid rgba(96,165,250,0.3);
+      border-radius: 12px;
+      padding: 30px;
+      margin-top: 40px;
+      text-align: center;
+    }
+    .highlight p {
+      font-size: 1.2rem;
+      color: #e2e8f0;
+    }
+    .scenario {
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 25px;
+      margin: 15px 0;
+    }
+    .scenario-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .scenario-label.bad { color: #f87171; }
+    .scenario-label.good { color: #4ade80; }
+    .scenario p {
+      color: #cbd5e1;
+    }
+    .footer {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+    @media print {
+      .slide { page-break-after: always; min-height: auto; padding: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="slide slide-title">
+    <h1>Proactive <span>Client Management</span></h1>
+    <p>Single Grain Paid Media Team</p>
+  </div>
+
+  <div class="slide">
+    <h2>The <span>Core Difference</span></h2>
+
+    <div class="comparison">
+      <div class="reactive">
+        <h3>Reactive</h3>
+        <ul>
+          <li>Wait for the client to notice problems</li>
+          <li>Respond to questions after they're asked</li>
+          <li>Fix issues when they become urgent</li>
+          <li>Let the client drive the agenda</li>
+          <li>Report what happened</li>
+        </ul>
+      </div>
+      <div class="proactive">
+        <h3>Proactive</h3>
+        <ul>
+          <li>Flag problems before the client sees them</li>
+          <li>Anticipate questions and answer them first</li>
+          <li>Catch issues while they're still small</li>
+          <li>Come to calls with a point of view</li>
+          <li>Recommend what to do next</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="highlight">
+      <p>Reactive teams get managed. Proactive teams become trusted partners.</p>
+    </div>
+  </div>
+
+  <div class="slide">
+    <h2>What <span>Reactive</span> Looks Like</h2>
+
+    <div class="scenario">
+      <div class="scenario-label bad">Tracking breaks</div>
+      <p>You notice conversion tracking is broken on Wednesday. You wait to mention it on Friday's call. The client asks why their numbers look weird. You explain the issue. Client asks why they're just hearing about this now.</p>
+    </div>
+
+    <div class="scenario">
+      <div class="scenario-label bad">Performance dips</div>
+      <p>CPL has been rising for two weeks. You report the numbers on the weekly call without commentary. Client asks what's going on. You say you'll look into it. Client wonders why you weren't already looking into it.</p>
+    </div>
+
+    <div class="scenario">
+      <div class="scenario-label bad">Campaign changes</div>
+      <p>You pause a campaign on Monday because budget is running hot. Client's sales team notices leads dropped. Client emails asking what happened. You explain. Client asks why they weren't told first.</p>
+    </div>
+
+    <div class="quote">
+      "Why am I just hearing about this now?"<br>
+      <span style="font-size: 1rem; font-style: normal; color: #64748b;">If you hear this, you were reactive.</span>
+    </div>
+  </div>
+
+  <div class="slide">
+    <h2>What <span>Proactive</span> Looks Like</h2>
+
+    <div class="scenario">
+      <div class="scenario-label good">Tracking breaks</div>
+      <p>You notice conversion tracking is broken on Wednesday. You Slack the client immediately: "Heads up, we found a tracking issue. Already working on a fix. Will confirm when resolved. Data from Wed-Thu may be incomplete." Client knows. No surprises on Friday.</p>
+    </div>
+
+    <div class="scenario">
+      <div class="scenario-label good">Performance dips</div>
+      <p>CPL has been rising for two weeks. You come to the call with: "CPL is up 18% over the past two weeks. We think it's audience fatigue on the top performer. We're testing three new angles this week. Here's what we expect to see."</p>
+    </div>
+
+    <div class="scenario">
+      <div class="scenario-label good">Campaign changes</div>
+      <p>Budget is running hot. Before pausing anything, you message the client: "We're pacing 15% over budget. I recommend pausing Campaign X for the rest of the week. This will reduce leads by roughly Y. Want to confirm before we make the change."</p>
+    </div>
+
+    <div class="quote">
+      "Thanks for the heads up."<br>
+      <span style="font-size: 1rem; font-style: normal; color: #64748b;">If you hear this, you were proactive.</span>
+    </div>
+  </div>
+
+  <div class="slide">
+    <h2>The <span>Proactive Habits</span></h2>
+
+    <div class="action-list">
+      <div class="action-item">
+        <div class="action-icon">👀</div>
+        <div class="action-content">
+          <h4>Check Before They Do</h4>
+          <p>Look at the data before the client does. If something is off, you should know first. Daily pacing checks. Weekly trend reviews. Catch it before it becomes a question.</p>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-icon">🚨</div>
+        <div class="action-content">
+          <h4>Flag Early, Not Late</h4>
+          <p>The moment you see something wrong, say something. A same-day Slack beats a next-week explanation. Clients forgive issues. They don't forgive being kept in the dark.</p>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-icon">💡</div>
+        <div class="action-content">
+          <h4>Come With a POV</h4>
+          <p>Don't just report numbers. Have an opinion. "Here's what's working. Here's what's not. Here's what I think we should do about it." Clients want a strategist, not a reporter.</p>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-icon">🔮</div>
+        <div class="action-content">
+          <h4>Anticipate the Next Question</h4>
+          <p>Before every call, ask yourself: What will they ask? What should they know? What would I want to know if I were them? Then answer those questions before they're asked.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <h2>Before Every <span>Client Call</span></h2>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="number">1</div>
+        <h4>What changed?</h4>
+        <p>Any tracking issues? Budget pacing problems? Performance swings? Campaigns paused or launched? Know it before they ask.</p>
+      </div>
+      <div class="card">
+        <div class="number">2</div>
+        <h4>What's working?</h4>
+        <p>What should we scale? What creative is winning? What audience is converting? Bring specific recommendations, not just observations.</p>
+      </div>
+      <div class="card">
+        <div class="number">3</div>
+        <h4>What's not?</h4>
+        <p>What should we pause or change? What's underperforming and why? What's your hypothesis? What's the fix?</p>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-top: 25px;">
+      <div class="card">
+        <div class="number">4</div>
+        <h4>What do they care about?</h4>
+        <p>What are their business priorities right now? What metrics matter to their boss? What's keeping them up at night?</p>
+      </div>
+      <div class="card">
+        <div class="number">5</div>
+        <h4>What will they ask?</h4>
+        <p>Put yourself in their shoes. What questions would you have? Prepare the answers before they ask.</p>
+      </div>
+      <div class="card">
+        <div class="number">6</div>
+        <h4>What should they know?</h4>
+        <p>Even if they don't ask, what do they need to know? Industry trends? Competitor moves? Platform changes? Bring it.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <h2>The <span>Communication Rules</span></h2>
+
+    <div class="action-list">
+      <div class="action-item">
+        <div class="action-icon">⚡</div>
+        <div class="action-content">
+          <h4>Bad news travels fast</h4>
+          <p>If something breaks, they hear about it today. Not Friday. Not "when we have more info." Today. With what you know and what you're doing about it.</p>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-icon">🔔</div>
+        <div class="action-content">
+          <h4>Changes get a heads up</h4>
+          <p>Before you pause a campaign, change budget, or shift strategy, the client knows first. They should never be surprised by something we did.</p>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-icon">📊</div>
+        <div class="action-content">
+          <h4>Data gets context</h4>
+          <p>Never send numbers without a story. What does this mean? Is it good or bad? What caused it? What are we doing about it? Numbers without context create anxiety.</p>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-icon">🎯</div>
+        <div class="action-content">
+          <h4>Recommendations are specific</h4>
+          <p>Not "we could try some new creative." Instead: "We recommend testing three new headline angles focused on [X]. Here's why. Here's the timeline. Here's what we expect."</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <h2>The <span>Trust Equation</span></h2>
+
+    <div class="quote" style="font-size: 1.6rem; text-align: center; border-left: none; padding-left: 0;">
+      Trust = Consistency + Transparency + Competence
+    </div>
+
+    <div class="grid-3" style="margin-top: 50px;">
+      <div class="card">
+        <h4>Consistency</h4>
+        <p>Same quality every time. Same communication cadence. Same preparation level. Clients trust patterns. Be predictable in a good way.</p>
+      </div>
+      <div class="card">
+        <h4>Transparency</h4>
+        <p>No hiding bad news. No spinning numbers. No waiting to see if they notice. If something's wrong, say it. Honesty builds trust faster than perfection.</p>
+      </div>
+      <div class="card">
+        <h4>Competence</h4>
+        <p>Know your stuff. Come prepared. Have answers. When you don't know, say so and follow up fast. Being proactive shows you're paying attention.</p>
+      </div>
+    </div>
+
+    <div class="highlight">
+      <p>Proactive communication is how you demonstrate all three.</p>
+    </div>
+  </div>
+
+  <div class="slide">
+    <h2>Start <span>Tomorrow</span></h2>
+
+    <div class="action-list">
+      <div class="action-item">
+        <div class="action-icon">1</div>
+        <div class="action-content">
+          <h4>Check your accounts first thing</h4>
+          <p>Before email, before Slack, before anything: quick scan of pacing, performance, and tracking. Know the state of your accounts before anyone asks.</p>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-icon">2</div>
+        <div class="action-content">
+          <h4>Prep 15 minutes before every call</h4>
+          <p>Not during the call. Before. What changed? What's your POV? What will they ask? What do they need to know?</p>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-icon">3</div>
+        <div class="action-content">
+          <h4>Send the Slack you've been putting off</h4>
+          <p>That issue you noticed but haven't mentioned? That change you made but didn't communicate? Send it now. Today.</p>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-icon">4</div>
+        <div class="action-content">
+          <h4>Bring one unsolicited recommendation</h4>
+          <p>To your next client call, bring one idea they didn't ask for. Something you noticed. Something you'd try. Show them you're thinking about their business.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide slide-title" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);">
+    <h1 style="font-size: 2.5rem;">Reactive teams wait to be asked.<br><span>Proactive teams earn trust.</span></h1>
+    <p style="margin-top: 30px;">Be the partner they don't want to lose.</p>
+  </div>
+
+  <div class="footer">
+    Single Grain Paid Media Team
+  </div>
+
+</body>
+</html>

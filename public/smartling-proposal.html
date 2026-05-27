@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smartling - ChatGPT Ads Pilot Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      padding: 40px;
+      color: #1e293b;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 40px; }
+    .logo { font-size: 0.9rem; color: #10a37f; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+    h1 { font-size: 2.2rem; font-weight: 300; margin-bottom: 10px; color: #1e293b; }
+    h1 span { color: #10a37f; font-weight: 600; }
+    .subtitle { color: #64748b; font-size: 1.1rem; }
+
+    .section {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #10a37f;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .budget-box {
+      background: linear-gradient(135deg, #10a37f 0%, #059669 100%);
+      border: none;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(16,163,127,0.3);
+    }
+    .budget-amount { font-size: 2.5rem; font-weight: 700; color: #fff; }
+    .budget-label { color: rgba(255,255,255,0.9); margin-top: 5px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th { text-align: left; color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; padding: 10px 0; border-bottom: 2px solid #e2e8f0; }
+    td { padding: 12px 0; border-bottom: 1px solid #f1f5f9; color: #334155; }
+
+    .highlight { color: #10a37f; font-weight: 600; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    .metric-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .metric-value { font-size: 1.5rem; font-weight: 700; color: #10a37f; }
+    .metric-label { color: #64748b; font-size: 0.85rem; margin-top: 4px; }
+
+    ul { list-style: none; }
+    li { padding: 8px 0; color: #334155; padding-left: 20px; position: relative; }
+    li::before { content: "→"; position: absolute; left: 0; color: #10a37f; }
+
+    .timeline { display: flex; justify-content: space-between; margin-top: 20px; }
+    .timeline-item { text-align: center; flex: 1; padding: 15px; background: #f8fafc; border-radius: 10px; margin: 0 5px; }
+    .timeline-week { font-size: 0.8rem; color: #10a37f; font-weight: 600; }
+    .timeline-task { color: #334155; font-size: 0.9rem; margin-top: 5px; }
+
+    .footer { text-align: center; margin-top: 40px; color: #64748b; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Pilot Test Proposal</div>
+      <h1>Smartling × <span>ChatGPT Ads</span></h1>
+      <p class="subtitle">60-day pilot to validate conversational AI as a new acquisition channel</p>
+    </header>
+
+    <div class="budget-box">
+      <div class="budget-amount">$12,500/mo</div>
+      <div class="budget-label">Pilot Test Budget (25% of total media spend)</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Why Test ChatGPT Ads Now</div>
+      <p style="color: #94a3b8; line-height: 1.7; margin-bottom: 20px;">
+        ChatGPT Ads is a new channel with early-mover advantage. Users actively ask about translation and localization—
+        we can reach them at the exact moment they're researching solutions. A controlled pilot lets us validate performance
+        before scaling.
+      </p>
+      <div class="two-col">
+        <div class="metric-card">
+          <div class="metric-value">New Channel</div>
+          <div class="metric-label">Early-mover advantage, less competition</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value">High Intent</div>
+          <div class="metric-label">Users actively seeking solutions</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Targeting Strategy</div>
+      <p style="color: #94a3b8; margin-bottom: 15px;">Contextual targeting based on conversation topics:</p>
+      <table>
+        <tr>
+          <th>Topic Cluster</th>
+          <th>Example Queries</th>
+          <th>Priority</th>
+        </tr>
+        <tr>
+          <td>Translation Software</td>
+          <td>"best translation management system", "enterprise TMS"</td>
+          <td><span class="highlight">High</span></td>
+        </tr>
+        <tr>
+          <td>Localization</td>
+          <td>"how to localize my app", "website localization tools"</td>
+          <td><span class="highlight">High</span></td>
+        </tr>
+        <tr>
+          <td>Multilingual Content</td>
+          <td>"manage content in multiple languages", "translation workflow"</td>
+          <td>Medium</td>
+        </tr>
+        <tr>
+          <td>Competitor Research</td>
+          <td>"Phrase vs Lokalise", "best Transifex alternative"</td>
+          <td><span class="highlight">High</span></td>
+        </tr>
+        <tr>
+          <td>Global Expansion</td>
+          <td>"launch product internationally", "enter new markets"</td>
+          <td>Medium</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Pilot Budget Allocation</div>
+      <table>
+        <tr>
+          <th>Campaign Type</th>
+          <th>Monthly Budget</th>
+          <th>Objective</th>
+        </tr>
+        <tr>
+          <td>High-Intent Topics</td>
+          <td class="highlight">$7,500 (60%)</td>
+          <td>Capture users actively researching TMS/localization</td>
+        </tr>
+        <tr>
+          <td>Competitor Conquesting</td>
+          <td class="highlight">$3,125 (25%)</td>
+          <td>Intercept users comparing solutions</td>
+        </tr>
+        <tr>
+          <td>Awareness / Education</td>
+          <td>$1,875 (15%)</td>
+          <td>Broader global expansion conversations</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Pilot Success Metrics</div>
+      <p style="color: #94a3b8; margin-bottom: 15px;">Without conversion tracking, we'll validate channel viability through engagement signals:</p>
+      <div class="two-col">
+        <div>
+          <table>
+            <tr><th>Metric</th><th>Target</th></tr>
+            <tr><td>Click-through Rate</td><td class="highlight">>2%</td></tr>
+            <tr><td>Cost per Click</td><td class="highlight"><$15</td></tr>
+            <tr><td>Impressions</td><td>100K+/mo</td></tr>
+            <tr><td>Clicks</td><td>800+/mo</td></tr>
+          </table>
+        </div>
+        <div>
+          <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 10px;">Pilot validation signals:</p>
+          <ul>
+            <li>Demo page visits from ChatGPT traffic</li>
+            <li>Time on site (target: >2 min)</li>
+            <li>Pricing page engagement</li>
+            <li>Manual demo request tracking</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Ad Creative Approach</div>
+      <p style="color: #94a3b8; margin-bottom: 15px;">Native, conversational ad formats that feel helpful, not intrusive:</p>
+      <ul>
+        <li><strong>Solution-focused:</strong> "Smartling helps enterprises translate content 50% faster with AI"</li>
+        <li><strong>Social proof:</strong> "Used by [Brand logos] to localize into 150+ languages"</li>
+        <li><strong>Pain point:</strong> "Still managing translations in spreadsheets? There's a better way"</li>
+        <li><strong>Competitive:</strong> "Looking for a Lokalise alternative with enterprise support?"</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">60-Day Pilot Timeline</div>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-week">Week 1</div>
+          <div class="timeline-task">Account setup<br>Campaign builds</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-week">Week 2-4</div>
+          <div class="timeline-task">Launch & learn<br>Collect data</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-week">Week 5-8</div>
+          <div class="timeline-task">Optimize<br>Test variations</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-week">Week 8</div>
+          <div class="timeline-task">Pilot review<br>Scale decision</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Next Steps</div>
+      <ul>
+        <li>Confirm budget and targeting priorities</li>
+        <li>Provide brand assets and approved messaging</li>
+        <li>Align on landing page URLs</li>
+        <li>Schedule kickoff call</li>
+        <li>Launch campaigns</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      Prepared by Out of Office Media
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Systems Access Guide - Single Grain</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 50px 60px;
+      border-radius: 8px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    }
+    .header {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #e86f34;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    h1 { font-size: 28px; margin: 0 0 10px 0; }
+    .subtitle { color: #666; margin: 0; }
+    .last-updated { font-size: 12px; color: #999; margin-top: 10px; }
+
+    h2 {
+      font-size: 18px;
+      margin: 35px 0 15px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e8e8e8;
+      color: #1a1a1a;
+    }
+    h3 {
+      font-size: 15px;
+      margin: 25px 0 10px 0;
+      color: #2d9a9a;
+    }
+
+    .email-box {
+      background: #e8f5f5;
+      border-left: 4px solid #2d9a9a;
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .email-box strong { color: #2d9a9a; }
+    .email-box code {
+      background: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .access-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .access-card {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 6px;
+      border-left: 3px solid #ddd;
+    }
+    .access-card.general { border-left-color: #666; }
+    .access-card.paid { border-left-color: #e86f34; }
+    .access-card.seo { border-left-color: #2d9a9a; }
+    .access-card.creative { border-left-color: #9c27b0; }
+    .access-card h4 {
+      margin: 0 0 5px 0;
+      font-size: 13px;
+    }
+    .access-card .team {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+    }
+
+    .platform-section {
+      background: #faf9f7;
+      border-radius: 8px;
+      padding: 25px;
+      margin: 20px 0;
+    }
+    .platform-section h3 {
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .platform-section .icon {
+      width: 24px;
+      height: 24px;
+      background: #e86f34;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    ol { padding-left: 20px; }
+    li { margin-bottom: 8px; }
+
+    .note {
+      background: #fff9e6;
+      border: 1px solid #f0e6cc;
+      padding: 12px 15px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin: 15px 0;
+    }
+    .note strong { color: #b8860b; }
+
+    .copy-btn {
+      background: #2d9a9a;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .copy-btn:hover { background: #248080; }
+
+    .toc {
+      background: #f5f5f5;
+      padding: 20px 25px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .toc h4 { margin: 0 0 10px 0; font-size: 14px; }
+    .toc ul { margin: 0; padding-left: 20px; }
+    .toc li { margin-bottom: 5px; }
+    .toc a { color: #2d9a9a; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .container { box-shadow: none; padding: 20px; }
+      .copy-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="label">Client Onboarding</div>
+    <h1>Systems Access Guide</h1>
+    <p class="subtitle">Platform access instructions for new client onboarding</p>
+    <p class="last-updated">Last Updated: April 2026</p>
+  </div>
+
+  <div class="email-box">
+    <strong>Single Grain Access Emails:</strong><br>
+    <code>analytics@singlegrain.com</code> - Analytics & Tracking<br>
+    <code>adwords@singlegrain.com</code> - Paid Media Platforms<br>
+    <code>operations@singlegrain.com</code> - Shopify & Operations
+  </div>
+
+  <h2>Access Required by Team</h2>
+
+  <div class="access-grid">
+    <div class="access-card general">
+      <div class="team">General / All Teams</div>
+      <h4>Google Analytics 4</h4>
+    </div>
+    <div class="access-card general">
+      <div class="team">General / All Teams</div>
+      <h4>Google Tag Manager</h4>
+    </div>
+    <div class="access-card general">
+      <div class="team">General / All Teams</div>
+      <h4>Client CRM</h4>
+    </div>
+    <div class="access-card seo">
+      <div class="team">SEO / AEO</div>
+      <h4>Google Search Console</h4>
+    </div>
+    <div class="access-card seo">
+      <div class="team">SEO / AEO</div>
+      <h4>Bing Webmaster Tools</h4>
+    </div>
+    <div class="access-card seo">
+      <div class="team">SEO / AEO</div>
+      <h4>Ahrefs / SEMrush</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>Google Ads</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>Meta Ads Manager</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>LinkedIn Ads</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>Microsoft Ads</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>TikTok Ads</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>Google Merchant Center</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>Amazon Ads</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>Pinterest Ads</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>Snapchat Ads</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>Reddit Ads</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>X (Twitter) Ads</h4>
+    </div>
+    <div class="access-card paid">
+      <div class="team">Paid Media</div>
+      <h4>Apple Search Ads</h4>
+    </div>
+    <div class="access-card creative">
+      <div class="team">Creative</div>
+      <h4>Brand Asset Folder</h4>
+    </div>
+    <div class="access-card general">
+      <div class="team">Ecommerce</div>
+      <h4>Shopify</h4>
+    </div>
+  </div>
+
+  <div class="toc">
+    <h4>Quick Links</h4>
+    <ul>
+      <li><a href="#ga4">Google Analytics 4</a></li>
+      <li><a href="#gtm">Google Tag Manager</a></li>
+      <li><a href="#gsc">Google Search Console</a></li>
+      <li><a href="#gads">Google Ads</a></li>
+      <li><a href="#gmc">Google Merchant Center</a></li>
+      <li><a href="#meta">Meta (Facebook/Instagram) Ads</a></li>
+      <li><a href="#linkedin">LinkedIn Ads</a></li>
+      <li><a href="#microsoft">Microsoft (Bing) Ads</a></li>
+      <li><a href="#tiktok">TikTok Ads</a></li>
+      <li><a href="#pinterest">Pinterest Ads</a></li>
+      <li><a href="#snapchat">Snapchat Ads</a></li>
+      <li><a href="#reddit">Reddit Ads</a></li>
+      <li><a href="#twitter">X (Twitter) Ads</a></li>
+      <li><a href="#amazon">Amazon Ads</a></li>
+      <li><a href="#apple">Apple Search Ads</a></li>
+      <li><a href="#shopify">Shopify</a></li>
+      <li><a href="#crm">CRM Access</a></li>
+    </ul>
+  </div>
+
+  <h2>Platform Instructions</h2>
+
+  <!-- Google Analytics 4 -->
+  <div class="platform-section" id="ga4">
+    <h3><span class="icon">G</span> Google Analytics 4</h3>
+    <ol>
+      <li>Go to <strong>Admin</strong> (gear icon, bottom left)</li>
+      <li>Under Account column, click <strong>Account Access Management</strong></li>
+      <li>Click the <strong>+</strong> button, then <strong>Add users</strong></li>
+      <li>Enter: <code>analytics@singlegrain.com</code> <button class="copy-btn" onclick="copyText('analytics@singlegrain.com')">Copy</button></li>
+      <li>Select role: <strong>Editor</strong></li>
+      <li>Click <strong>Add</strong></li>
+      <li>Repeat for: <code>adwords@singlegrain.com</code></li>
+    </ol>
+    <div class="note">
+      <strong>Note:</strong> Grant access at the Account level (not Property level) so we can see all properties.
+    </div>
+  </div>
+
+  <!-- Google Tag Manager -->
+  <div class="platform-section" id="gtm">
+    <h3><span class="icon">T</span> Google Tag Manager</h3>
+    <ol>
+      <li>Go to <strong>Admin</strong></li>
+      <li>Under Account, click <strong>User Management</strong></li>
+      <li>Click <strong>+</strong> then <strong>Add users</strong></li>
+      <li>Enter: <code>analytics@singlegrain.com</code></li>
+      <li>Set Account Permissions to <strong>Admin</strong></li>
+      <li>Set Container Permissions to <strong>Publish</strong></li>
+      <li>Click <strong>Invite</strong></li>
+      <li>Repeat for: <code>adwords@singlegrain.com</code></li>
+    </ol>
+  </div>
+
+  <!-- Google Search Console -->
+  <div class="platform-section" id="gsc">
+    <h3><span class="icon">S</span> Google Search Console</h3>
+    <ol>
+      <li>Select your property in Search Console</li>
+      <li>Click <strong>Settings</strong> (gear icon)</li>
+      <li>Click <strong>Users and permissions</strong></li>
+      <li>Click <strong>Add user</strong></li>
+      <li>Enter: <code>analytics@singlegrain.com</code></li>
+      <li>Select permission: <strong>Full</strong></li>
+      <li>Click <strong>Add</strong></li>
+    </ol>
+    <div class="note">
+      <strong>Note:</strong> We do not need Property Owner access. Full User access is sufficient.
+    </div>
+  </div>
+
+  <!-- Google Ads -->
+  <div class="platform-section" id="gads">
+    <h3><span class="icon">A</span> Google Ads</h3>
+    <ol>
+      <li>Sign into Google Ads</li>
+      <li>Locate your <strong>Customer ID</strong> (top right corner, format: XXX-XXX-XXXX)</li>
+      <li>Send the Customer ID to your Single Grain contact</li>
+      <li>We will send an access request</li>
+      <li>You'll receive an email from Google - <strong>accept the request</strong></li>
+    </ol>
+    <div class="note">
+      <strong>Alternatively:</strong> Go to Tools & Settings > Access and security > Add user > Enter <code>adwords@singlegrain.com</code> with Admin access.
+    </div>
+  </div>
+
+  <!-- Google Merchant Center -->
+  <div class="platform-section" id="gmc">
+    <h3><span class="icon">M</span> Google Merchant Center</h3>
+    <ol>
+      <li>In Merchant Center, click <strong>Settings</strong> (gear icon)</li>
+      <li>Select <strong>Account access</strong></li>
+      <li>Click <strong>Add user</strong></li>
+      <li>Enter: <code>analytics@singlegrain.com</code></li>
+      <li>Set access level: <strong>Admin</strong></li>
+      <li>Click <strong>Add user</strong></li>
+    </ol>
+  </div>
+
+  <!-- Meta Ads -->
+  <div class="platform-section" id="meta">
+    <h3><span class="icon">M</span> Meta (Facebook/Instagram) Ads</h3>
+    <p><strong>Must be done on desktop, not mobile.</strong></p>
+
+    <h4>Option A: Accept Partner Request (Preferred)</h4>
+    <ol>
+      <li>Go to <strong>Business Settings</strong> at business.facebook.com</li>
+      <li>Click <strong>Partners</strong> in left menu</li>
+      <li>Look for pending request from <strong>Single Grain</strong></li>
+      <li>Accept with <strong>Full Control</strong> access</li>
+    </ol>
+
+    <h4>Option B: Send Partner Invite</h4>
+    <ol>
+      <li>Go to <strong>Business Settings</strong></li>
+      <li>Click <strong>Partners</strong> > <strong>Add</strong></li>
+      <li>Enter Single Grain Business ID: <code>10152546861047072</code> <button class="copy-btn" onclick="copyText('10152546861047072')">Copy</button></li>
+      <li>Grant <strong>Full Control</strong> to:
+        <ul>
+          <li>Ad Account(s)</li>
+          <li>Facebook Page(s)</li>
+          <li>Instagram Account(s)</li>
+          <li>Pixel(s)</li>
+        </ul>
+      </li>
+    </ol>
+    <div class="note">
+      <strong>Important:</strong> We need access to the Page AND Ad Account AND Pixel to run campaigns.
+    </div>
+  </div>
+
+  <!-- LinkedIn Ads -->
+  <div class="platform-section" id="linkedin">
+    <h3><span class="icon">in</span> LinkedIn Ads</h3>
+
+    <h4>If you have Business Manager:</h4>
+    <ol>
+      <li>Sign into Business Manager</li>
+      <li>Click <strong>Partners</strong> in left menu</li>
+      <li>Click <strong>Add partner</strong></li>
+      <li>Enter Single Grain Partner ID: <code>7186746961612406786</code> <button class="copy-btn" onclick="copyText('7186746961612406786')">Copy</button></li>
+      <li>Click <strong>Share ad accounts</strong> and select accounts to share</li>
+      <li>Assign highest available role</li>
+      <li>Click <strong>Share Pages</strong> and grant page access</li>
+    </ol>
+
+    <h4>If you only have Campaign Manager:</h4>
+    <ol>
+      <li>Find your <strong>Ad Account ID</strong> (9-digit number under account name)</li>
+      <li>Send the ID to your Single Grain contact</li>
+      <li>We will request access - approve when you receive the notification</li>
+    </ol>
+    <div class="note">
+      <strong>Note:</strong> We need both Ad Account access AND Page access to create ads.
+    </div>
+  </div>
+
+  <!-- Microsoft Ads -->
+  <div class="platform-section" id="microsoft">
+    <h3><span class="icon">B</span> Microsoft (Bing) Ads</h3>
+    <ol>
+      <li>Sign into Microsoft Ads</li>
+      <li>Click <strong>Tools</strong> > <strong>Account access</strong></li>
+      <li>Go to the <strong>Users</strong> tab</li>
+      <li>Click <strong>Invite user</strong></li>
+      <li>Enter: <code>adwords@singlegrain.com</code></li>
+      <li>Select role: <strong>Super Admin</strong></li>
+      <li>Click <strong>Send</strong></li>
+    </ol>
+  </div>
+
+  <!-- TikTok Ads -->
+  <div class="platform-section" id="tiktok">
+    <h3><span class="icon">T</span> TikTok Ads</h3>
+    <ol>
+      <li>Log into TikTok Business Center</li>
+      <li>Click <strong>Users</strong> > <strong>Partners</strong> in left menu</li>
+      <li>Click <strong>Add Partners</strong></li>
+      <li>Enter Single Grain Business Center ID: <code>6998239304547909634</code> <button class="copy-btn" onclick="copyText('6998239304547909634')">Copy</button></li>
+      <li>Click <strong>Next</strong></li>
+      <li>Select ad accounts to share</li>
+      <li>Assign <strong>Admin</strong> role</li>
+      <li>Click <strong>Confirm</strong></li>
+    </ol>
+  </div>
+
+  <!-- Pinterest Ads -->
+  <div class="platform-section" id="pinterest">
+    <h3><span class="icon">P</span> Pinterest Ads</h3>
+    <ol>
+      <li>Log into Pinterest Business account</li>
+      <li>Click dropdown arrow (top-right) > <strong>Business Access</strong></li>
+      <li>Click <strong>Partners</strong> in left menu</li>
+      <li>Click <strong>Add partner</strong></li>
+      <li>Enter Single Grain Business ID: <code>794322590436195524</code> <button class="copy-btn" onclick="copyText('794322590436195524')">Copy</button></li>
+      <li>Select <strong>Invite a partner to access your assets</strong></li>
+      <li>Assign ad account access</li>
+    </ol>
+  </div>
+
+  <!-- Snapchat Ads -->
+  <div class="platform-section" id="snapchat">
+    <h3><span class="icon">S</span> Snapchat Ads</h3>
+    <p><strong>Two-step process: Organization first, then Ad Account.</strong></p>
+
+    <h4>Step 1: Organization Access</h4>
+    <ol>
+      <li>Log into Ads Manager</li>
+      <li>Click menu (top left) > <strong>Members</strong></li>
+      <li>Click <strong>+ Invite Member</strong></li>
+      <li>Enter: <code>adwords@singlegrain.com</code></li>
+      <li>Set Organization Role: <strong>Business Admin</strong></li>
+    </ol>
+
+    <h4>Step 2: Ad Account Access</h4>
+    <ol>
+      <li>In Members, select <code>adwords@singlegrain.com</code></li>
+      <li>Under "Account Memberships", select ad account(s)</li>
+      <li>Assign role: <strong>Account Admin</strong></li>
+    </ol>
+  </div>
+
+  <!-- Reddit Ads -->
+  <div class="platform-section" id="reddit">
+    <h3><span class="icon">R</span> Reddit Ads</h3>
+    <ol>
+      <li>Log into Reddit Ads</li>
+      <li>Click menu (top left) > <strong>Users</strong></li>
+      <li>Click <strong>+ Invite New Members</strong></li>
+      <li>Enter: <code>adwords@singlegrain.com</code></li>
+      <li>Set Business Role: <strong>Member</strong></li>
+      <li>Click <strong>Next</strong></li>
+      <li>Select the ad account to grant access</li>
+      <li>Set Ad Account Role: <strong>Administrator</strong></li>
+      <li>Click <strong>Done</strong></li>
+    </ol>
+  </div>
+
+  <!-- X (Twitter) Ads -->
+  <div class="platform-section" id="twitter">
+    <h3><span class="icon">X</span> X (Twitter) Ads</h3>
+    <ol>
+      <li>Log into ads.twitter.com</li>
+      <li>Click your account name (top right)</li>
+      <li>Select <strong>Edit access to account</strong></li>
+      <li>Click <strong>Add access</strong></li>
+      <li>Enter Single Grain handle: <code>@singlegrain</code></li>
+      <li>Select access level: <strong>Ad Manager</strong></li>
+      <li>Click <strong>Save changes</strong></li>
+    </ol>
+  </div>
+
+  <!-- Amazon Ads -->
+  <div class="platform-section" id="amazon">
+    <h3><span class="icon">a</span> Amazon Ads</h3>
+    <p>Instructions vary based on account type:</p>
+    <ul>
+      <li><strong>Vendor Central:</strong> <a href="https://advertising.amazon.com/help/GCCXMZYCK4RXWS6S" target="_blank">Follow these instructions</a></li>
+      <li><strong>Seller Central:</strong> <a href="https://advertising.amazon.com/help/G5TKV4RSTJ77CLPC" target="_blank">Follow these instructions</a></li>
+    </ul>
+    <p>Add: <code>adwords@singlegrain.com</code></p>
+  </div>
+
+  <!-- Apple Search Ads -->
+  <div class="platform-section" id="apple">
+    <h3><span class="icon"></span> Apple Search Ads</h3>
+    <ol>
+      <li>Sign into Apple Search Ads</li>
+      <li>Go to <strong>Settings</strong> > <strong>User Management</strong></li>
+      <li>Click <strong>Invite User</strong></li>
+      <li>Enter Apple ID: <code>analytics@singlegrain.com</code></li>
+      <li>Name: Single Grain</li>
+      <li>Grant <strong>Admin</strong> access</li>
+    </ol>
+  </div>
+
+  <!-- Shopify -->
+  <div class="platform-section" id="shopify">
+    <h3><span class="icon">S</span> Shopify</h3>
+    <ol>
+      <li>From Shopify Admin, click <strong>Settings</strong> > <strong>Users and permissions</strong></li>
+      <li>Click <strong>Add staff</strong></li>
+      <li>Enter:
+        <ul>
+          <li>Full Name: <code>Single Grain</code></li>
+          <li>Email: <code>operations@singlegrain.com</code></li>
+        </ul>
+      </li>
+      <li>Grant <strong>all available permissions</strong></li>
+      <li>Click <strong>Send invite</strong></li>
+    </ol>
+  </div>
+
+  <!-- CRM -->
+  <div class="platform-section" id="crm">
+    <h3><span class="icon">C</span> CRM Access</h3>
+    <p>Grant access to: <code>adwords@singlegrain.com</code></p>
+    <p>Common CRMs:</p>
+    <ul>
+      <li><strong>HubSpot:</strong> Settings > Users & Teams > Create user</li>
+      <li><strong>Salesforce:</strong> Setup > Users > New User</li>
+      <li><strong>Pipedrive:</strong> Settings > Manage users > Add user</li>
+    </ul>
+    <div class="note">
+      <strong>Why we need CRM access:</strong> To set up offline conversion tracking, validate lead quality, and optimize campaigns based on downstream metrics (MQL, SQL, closed revenue).
+    </div>
+  </div>
+
+  <h2>Checklist Summary</h2>
+  <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
+    <tr style="background: #f5f5f5;">
+      <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Platform</th>
+      <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Email to Add</th>
+      <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Access Level</th>
+    </tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Google Analytics 4</td><td style="padding: 8px; border-bottom: 1px solid #eee;">analytics@ + adwords@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Editor</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Google Tag Manager</td><td style="padding: 8px; border-bottom: 1px solid #eee;">analytics@ + adwords@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Admin + Publish</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Google Search Console</td><td style="padding: 8px; border-bottom: 1px solid #eee;">analytics@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Full</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Google Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">adwords@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Admin</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Google Merchant Center</td><td style="padding: 8px; border-bottom: 1px solid #eee;">analytics@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Admin</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Meta Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Partner ID: 10152546861047072</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Full Control</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">LinkedIn Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Partner ID: 7186746961612406786</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Admin</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Microsoft Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">adwords@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Super Admin</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">TikTok Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">BC ID: 6998239304547909634</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Admin</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Pinterest Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Biz ID: 794322590436195524</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Partner</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Snapchat Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">adwords@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Business Admin + Account Admin</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Reddit Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">adwords@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Administrator</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">X (Twitter) Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">@singlegrain</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Ad Manager</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Amazon Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">adwords@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Admin</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Apple Search Ads</td><td style="padding: 8px; border-bottom: 1px solid #eee;">analytics@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Admin</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Shopify</td><td style="padding: 8px; border-bottom: 1px solid #eee;">operations@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Full permissions</td></tr>
+    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">CRM</td><td style="padding: 8px; border-bottom: 1px solid #eee;">adwords@</td><td style="padding: 8px; border-bottom: 1px solid #eee;">Varies</td></tr>
+  </table>
+
+</div>
+
+<script>
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Copied: ' + text);
+  });
+}
+</script>
+
+</body>
+</html>

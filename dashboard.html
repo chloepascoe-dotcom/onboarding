@@ -91,6 +91,48 @@
       border-color: #4f46e5;
       background: #f0f0ff;
     }
+    .owners-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .owner-group {
+      border: 1px solid #e1e5eb;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .owner-group-label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .owners-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .owner-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 2px solid #e1e5eb;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+    .owner-checkbox:hover {
+      border-color: #4f46e5;
+    }
+    .owner-checkbox input {
+      width: auto;
+    }
+    .owner-checkbox.checked {
+      border-color: #4f46e5;
+      background: #f0f0ff;
+    }
     .btn {
       width: 100%;
       padding: 16px;
@@ -339,6 +381,80 @@
       font-weight: 600;
       font-size: 0.9rem;
     }
+
+    /* File Upload Styles */
+    .file-upload-area {
+      border: 2px dashed #e1e5eb;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
+    }
+    .file-upload-area:hover, .file-upload-area.dragover {
+      border-color: #4f46e5;
+      background: #f0f0ff;
+    }
+    .upload-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .upload-text {
+      color: #666;
+      font-size: 0.95rem;
+    }
+    .upload-link {
+      color: #4f46e5;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .upload-hint {
+      color: #9ca3af;
+      font-size: 0.8rem;
+      margin-top: 8px;
+    }
+    .file-list {
+      margin-top: 12px;
+    }
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #f0f0ff;
+      border: 1px solid #4f46e5;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .file-icon {
+      font-size: 1.2rem;
+    }
+    .file-name {
+      font-weight: 500;
+      color: #333;
+    }
+    .file-size {
+      color: #9ca3af;
+      font-size: 0.8rem;
+    }
+    .file-remove {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .file-remove:hover {
+      background: #fef2f2;
+    }
   </style>
 </head>
 <body>
@@ -364,8 +480,8 @@
 
         <div class="row">
           <div class="form-group">
-            <label>Monthly Budget *</label>
-            <input type="number" id="budget" required placeholder="e.g., 50000">
+            <label>Monthly Budget <span style="font-weight: normal; color: #666;">(Paid Media only)</span></label>
+            <input type="number" id="budget" placeholder="e.g., 50000">
           </div>
           <div class="form-group">
             <label>Kickoff Date *</label>
@@ -391,21 +507,93 @@
           </div>
         </div>
 
-        <div class="row">
-          <div class="form-group">
-            <label>Assigned Owner</label>
-            <select id="assignedOwner">
-              <option value="Chloe Pascoe">Chloe Pascoe</option>
-              <option value="Alex Kim">Alex Kim</option>
-              <option value="Jordan Reyes">Jordan Reyes</option>
-              <option value="Sam Patel">Sam Patel</option>
-              <option value="Morgan Liu">Morgan Liu</option>
-            </select>
+        <div class="form-group">
+          <label>Assigned Owners (select all that apply)</label>
+          <div class="owners-section">
+            <div class="owner-group">
+              <div class="owner-group-label">Paid Media</div>
+              <div class="owners-grid">
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Marc Enokou">
+                  <span>Marc Enokou</span>
+                </label>
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Mary Ghazaryan">
+                  <span>Mary Ghazaryan</span>
+                </label>
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Sonia Nunez">
+                  <span>Sonia Nunez</span>
+                </label>
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Stefano Santos">
+                  <span>Stefano Santos</span>
+                </label>
+              </div>
+            </div>
+            <div class="owner-group">
+              <div class="owner-group-label">Creative</div>
+              <div class="owners-grid">
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Kriste Paulauskaite">
+                  <span>Kriste Paulauskaite</span>
+                </label>
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Chris Drago">
+                  <span>Chris Drago</span>
+                </label>
+              </div>
+            </div>
+            <div class="owner-group">
+              <div class="owner-group-label">SEO</div>
+              <div class="owners-grid">
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Isaac Andrews">
+                  <span>Isaac Andrews</span>
+                </label>
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Meg Brodie">
+                  <span>Meg Brodie</span>
+                </label>
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Hailey Ingeman">
+                  <span>Hailey Ingeman</span>
+                </label>
+              </div>
+            </div>
+            <div class="owner-group">
+              <div class="owner-group-label">Leadership</div>
+              <div class="owners-grid">
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Chloe Pascoe">
+                  <span>Chloe Pascoe</span>
+                </label>
+                <label class="owner-checkbox">
+                  <input type="checkbox" name="owners" value="Amy Lezca">
+                  <span>Amy Lezca</span>
+                </label>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Primary Contact Email</label>
-            <input type="email" id="contactEmail" placeholder="e.g., sarah@company.com">
+        </div>
+
+        <div class="form-group">
+          <label>Primary Contact Email</label>
+          <input type="email" id="contactEmail" placeholder="e.g., sarah@company.com">
+        </div>
+
+        <div class="form-group">
+          <label>Supplementary Documents (optional)</label>
+          <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px;">
+            Upload SOW, strategy deck, or proposal to customize the onboarding roadmap
+          </p>
+          <div class="file-upload-area" id="fileUploadArea">
+            <input type="file" id="fileInput" multiple accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt" style="display: none;">
+            <div class="upload-icon">📎</div>
+            <div class="upload-text">Drag & drop files here or <span class="upload-link">browse</span></div>
+            <div class="upload-hint">PDF, DOCX, XLSX, PPTX supported</div>
           </div>
+          <div class="file-list" id="fileList"></div>
         </div>
 
         <button type="submit" class="btn" id="submitBtn">
@@ -422,48 +610,45 @@
 
         <div class="pipeline-steps">
           <div class="pipeline-step">
-            <div class="step-icon complete" id="step1">1</div>
-            <span class="step-label">Onboarding<br>Created</span>
+            <div class="step-icon complete" id="step1">✓</div>
+            <span class="step-label">Gantt<br>Charts</span>
           </div>
           <div class="pipeline-step">
-            <div class="step-icon" id="step2">2</div>
-            <span class="step-label">Access<br>Requested</span>
+            <div class="step-icon complete" id="step2">✓</div>
+            <span class="step-label">Access<br>Checklist</span>
           </div>
           <div class="pipeline-step">
-            <div class="step-icon" id="step3">3</div>
-            <span class="step-label">Access<br>Confirmed</span>
+            <div class="step-icon complete" id="step3">✓</div>
+            <span class="step-label">Research<br>Report</span>
           </div>
           <div class="pipeline-step">
-            <div class="step-icon" id="step4">4</div>
-            <span class="step-label">Research<br>Agent</span>
+            <div class="step-icon complete" id="step4">✓</div>
+            <span class="step-label">Slack<br>Notified</span>
           </div>
           <div class="pipeline-step">
-            <div class="step-icon" id="step5">5</div>
-            <span class="step-label">Ready to<br>Launch</span>
+            <div class="step-icon complete" id="step5">✓</div>
+            <span class="step-label">Ready for<br>Team</span>
           </div>
         </div>
 
         <div class="links-section" id="linksSection">
           <a href="#" class="link-card" id="ganttLink" target="_blank">
             <div class="icon">📊</div>
-            <div class="label">Gantt Chart</div>
+            <div class="label">Gantt Charts</div>
           </a>
           <a href="#" class="link-card" id="accessLink" target="_blank">
             <div class="icon">🔐</div>
             <div class="label">Access Checklist</div>
           </a>
-          <a href="#" class="link-card" id="researchLink" target="_blank" style="opacity: 0.4; pointer-events: none;">
+          <a href="#" class="link-card" id="researchLink" target="_blank">
             <div class="icon">🤖</div>
             <div class="label">Research Report</div>
           </a>
         </div>
 
         <div class="action-buttons">
-          <button class="action-btn primary" id="confirmAccessBtn">
-            Simulate: Client Confirms Access
-          </button>
-          <button class="action-btn secondary" id="newClientBtn">
-            + New Client
+          <button class="action-btn primary" id="newClientBtn" style="grid-column: span 2;">
+            + Create Another Client
           </button>
         </div>
 
@@ -494,6 +679,84 @@
       });
       if (cb.checked) cb.closest('.service-checkbox').classList.add('checked');
     });
+
+    // Owner checkbox styling
+    document.querySelectorAll('.owner-checkbox input').forEach(cb => {
+      cb.addEventListener('change', function() {
+        this.closest('.owner-checkbox').classList.toggle('checked', this.checked);
+      });
+    });
+
+    // File upload handling
+    let uploadedFiles = [];
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+
+    fileUploadArea.addEventListener('click', () => fileInput.click());
+
+    fileUploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      fileUploadArea.classList.add('dragover');
+    });
+
+    fileUploadArea.addEventListener('dragleave', () => {
+      fileUploadArea.classList.remove('dragover');
+    });
+
+    fileUploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      fileUploadArea.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', () => {
+      handleFiles(fileInput.files);
+    });
+
+    function handleFiles(files) {
+      for (const file of files) {
+        if (!uploadedFiles.find(f => f.name === file.name)) {
+          uploadedFiles.push(file);
+        }
+      }
+      renderFileList();
+    }
+
+    function getFileIcon(filename) {
+      const ext = filename.split('.').pop().toLowerCase();
+      switch(ext) {
+        case 'pdf': return '📕';
+        case 'doc': case 'docx': return '📘';
+        case 'xls': case 'xlsx': return '📗';
+        case 'ppt': case 'pptx': return '📙';
+        default: return '📄';
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function renderFileList() {
+      fileList.innerHTML = uploadedFiles.map((file, idx) => `
+        <div class="file-item">
+          <div class="file-info">
+            <span class="file-icon">${getFileIcon(file.name)}</span>
+            <span class="file-name">${file.name}</span>
+            <span class="file-size">(${formatFileSize(file.size)})</span>
+          </div>
+          <button type="button" class="file-remove" onclick="removeFile(${idx})">×</button>
+        </div>
+      `).join('');
+    }
+
+    function removeFile(idx) {
+      uploadedFiles.splice(idx, 1);
+      renderFileList();
+    }
 
     function addLog(icon, message) {
       const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -526,21 +789,25 @@
       btn.innerHTML = '<span class="spinner"></span>Creating...';
       result.style.display = 'none';
 
-      const formData = {
-        client_name: document.getElementById('clientName').value,
-        industry: document.getElementById('industry').value,
-        monthly_budget: parseInt(document.getElementById('budget').value),
-        kickoff_date: document.getElementById('kickoffDate').value,
-        services: Array.from(document.querySelectorAll('input[name="services"]:checked')).map(cb => cb.value),
-        assigned_owner: document.getElementById('assignedOwner').value,
-        contact_email: document.getElementById('contactEmail').value
-      };
+      // Build FormData for file uploads
+      const formData = new FormData();
+      formData.append('client_name', document.getElementById('clientName').value);
+      formData.append('industry', document.getElementById('industry').value);
+      formData.append('monthly_budget', document.getElementById('budget').value);
+      formData.append('kickoff_date', document.getElementById('kickoffDate').value);
+      formData.append('services', JSON.stringify(Array.from(document.querySelectorAll('input[name="services"]:checked')).map(cb => cb.value)));
+      formData.append('assigned_owner', Array.from(document.querySelectorAll('input[name="owners"]:checked')).map(cb => cb.value).join(', ') || 'Unassigned');
+      formData.append('contact_email', document.getElementById('contactEmail').value);
+
+      // Append uploaded files
+      for (const file of uploadedFiles) {
+        formData.append('files', file);
+      }
 
       try {
         const response = await fetch('/api/generate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
+          body: formData  // No Content-Type header - browser sets it with boundary
         });
 
         const data = await response.json();
@@ -552,29 +819,29 @@
           // Update pipeline UI
           document.getElementById('pipelineClient').textContent = currentClient;
           document.getElementById('ganttLink').href = spreadsheetUrl;
-          document.getElementById('accessLink').href = spreadsheetUrl.replace(/#.*/, '') + '#gid=0';
+          document.getElementById('accessLink').href = spreadsheetUrl.replace(/#.*/, '');
+          document.getElementById('researchLink').href = spreadsheetUrl.replace(/#.*/, '');
           pipeline.classList.add('active');
 
-          // Reset steps
+          // All steps complete immediately
           updateStep(1, 'complete');
-          updateStep(2, 'active');
-          updateStep(3, '');
-          updateStep(4, '');
-          updateStep(5, '');
+          updateStep(2, 'complete');
+          updateStep(3, 'complete');
+          updateStep(4, 'complete');
+          updateStep(5, 'complete');
 
           // Clear and add logs
           document.getElementById('logEntries').innerHTML = '';
+          const services = data.services ? data.services.join(', ') : 'Paid Media';
           addLog('🚀', `Onboarding created for ${currentClient}`);
-          addLog('📄', 'Gantt chart populated with 12-week timeline');
-          addLog('🔐', '22 platform access requests generated');
+          addLog('📊', `Gantt charts created: ${services}`);
+          addLog('🔐', 'Access checklist generated');
+          addLog('🤖', 'Research report generated');
           addLog('📨', 'Slack notification sent to team');
+          addLog('✅', 'Ready for team to begin work!');
 
           // Hide form, show pipeline
           document.getElementById('onboardingForm').style.display = 'none';
-
-          // Enable research link styling
-          document.getElementById('researchLink').style.opacity = '0.4';
-          document.getElementById('researchLink').style.pointerEvents = 'none';
 
         } else {
           throw new Error(data.error || 'Unknown error');
@@ -589,70 +856,6 @@
       btn.innerHTML = 'Create Onboarding';
     });
 
-    // Confirm Access button
-    document.getElementById('confirmAccessBtn').addEventListener('click', async () => {
-      if (!currentClient) return;
-
-      const btn = document.getElementById('confirmAccessBtn');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>Processing...';
-
-      updateStep(2, 'complete');
-      updateStep(3, 'active');
-      addLog('⏳', 'Client confirming platform access...');
-
-      try {
-        const response = await fetch('/api/confirm-access', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ client_name: currentClient })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          updateStep(3, 'complete');
-          updateStep(4, 'active');
-          addLog('✅', 'All 22 platform access confirmed');
-          addLog('🤖', 'Research Agent triggered automatically');
-
-          // Simulate research progress
-          setTimeout(() => {
-            addLog('🔍', 'Analyzing competitor ad libraries...');
-          }, 500);
-          setTimeout(() => {
-            addLog('📈', 'Identifying keyword opportunities...');
-          }, 1000);
-          setTimeout(() => {
-            addLog('🎯', 'Building campaign recommendations...');
-          }, 1500);
-          setTimeout(() => {
-            addLog('⚙️', 'Auditing tracking setup...');
-          }, 2000);
-          setTimeout(() => {
-            updateStep(4, 'complete');
-            updateStep(5, 'complete');
-            addLog('✅', 'Research Agent complete!');
-            addLog('📨', 'Slack notification sent: Research ready');
-
-            // Enable research link
-            const researchLink = document.getElementById('researchLink');
-            researchLink.style.opacity = '1';
-            researchLink.style.pointerEvents = 'auto';
-            researchLink.href = spreadsheetUrl.replace(/#.*/, '');
-
-            btn.innerHTML = '✅ Complete - View Research Report';
-            btn.classList.remove('primary');
-            btn.classList.add('secondary');
-          }, 2500);
-        }
-      } catch (err) {
-        addLog('❌', 'Error: ' + err.message);
-        btn.disabled = false;
-        btn.innerHTML = 'Retry: Confirm Access';
-      }
-    });
-
     // New Client button
     document.getElementById('newClientBtn').addEventListener('click', () => {
       currentClient = null;
@@ -661,15 +864,18 @@
       document.getElementById('onboardingForm').style.display = 'block';
       document.getElementById('onboardingForm').reset();
       document.getElementById('kickoffDate').value = nextMonday.toISOString().split('T')[0];
-      document.getElementById('confirmAccessBtn').disabled = false;
-      document.getElementById('confirmAccessBtn').innerHTML = 'Simulate: Client Confirms Access';
-      document.getElementById('confirmAccessBtn').classList.add('primary');
-      document.getElementById('confirmAccessBtn').classList.remove('secondary');
-
       // Reset checkboxes
       document.querySelectorAll('.service-checkbox').forEach(cb => cb.classList.remove('checked'));
       document.querySelector('.service-checkbox input[value="paid_media"]').checked = true;
       document.querySelector('.service-checkbox input[value="paid_media"]').closest('.service-checkbox').classList.add('checked');
+
+      // Reset owner checkboxes
+      document.querySelectorAll('.owner-checkbox').forEach(cb => cb.classList.remove('checked'));
+      document.querySelectorAll('input[name="owners"]').forEach(cb => cb.checked = false);
+
+      // Reset uploaded files
+      uploadedFiles = [];
+      renderFileList();
     });
   </script>
 </body>

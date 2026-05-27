@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MadCap + Single Grain - Alignment</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+      min-height: 100vh;
+      padding: 50px;
+      color: #fff;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 50px; }
+    .logo { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px; }
+    h1 { font-size: 2.2rem; font-weight: 300; margin-bottom: 8px; }
+    h1 span { color: #60a5fa; font-weight: 600; }
+    .date { color: #64748b; font-size: 0.9rem; }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #60a5fa;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .item {
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .item:last-child { border-bottom: none; }
+
+    .icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(96,165,250,0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .item-content h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+    .item-content p {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .timeline {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .timeline-item {
+      flex: 1;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .timeline-item .label {
+      font-size: 0.75rem;
+      color: #60a5fa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .timeline-item .content {
+      color: #e2e8f0;
+      font-size: 0.9rem;
+    }
+
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(96,165,250,0.15) 0%, rgba(96,165,250,0.05) 100%);
+      border: 1px solid rgba(96,165,250,0.3);
+      border-radius: 12px;
+      padding: 25px;
+      text-align: center;
+      margin-top: 30px;
+    }
+    .highlight-box p {
+      color: #e2e8f0;
+      font-size: 1rem;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Single Grain</div>
+      <h1>MadCap <span>Alignment</span></h1>
+      <div class="date">May 14, 2026</div>
+    </header>
+
+    <div class="highlight-box" style="margin-top: 0; margin-bottom: 30px; text-align: left;">
+      <p style="margin-bottom: 0;">Yesterday's call didn't go the way it should have. There was confusion on our end around budget numbers, and we jumped into metrics without first walking through the KPI tracker the way Megan does for SEO. That's on us. We've already corrected it internally and want to make sure we're fully aligned before moving forward.</p>
+    </div>
+
+    <div class="card">
+      <h2>What Happened and What We Fixed</h2>
+
+      <div class="item">
+        <div class="icon">💰</div>
+        <div class="item-content">
+          <h3>Budget: $83,864</h3>
+          <p>The $68,500 figure came from an outdated internal tracker. We caught it, corrected it, and all documentation now reflects the correct $83,864 committed budget.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="icon">🔄</div>
+        <div class="item-content">
+          <h3>Full Context Review Completed</h3>
+          <p>Stephano has reviewed all of James's recordings and materials. We're fully up to speed on your goals and the milestones you're tracking toward.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>What You'll See Different</h2>
+
+      <div class="item">
+        <div class="icon">👥</div>
+        <div class="item-content">
+          <h3>Chloe on All Calls</h3>
+          <p>I'll be joining all MadCap calls going forward to provide additional support and oversight.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="icon">📋</div>
+        <div class="item-content">
+          <h3>Calls Start with the Plan</h3>
+          <p>Every call will open with the KPI tracker and milestones, the same format Megan uses for SEO. You'll always know where we are on the plan before we get into metrics.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="icon">🔔</div>
+        <div class="item-content">
+          <h3>Heads Up Before Changes</h3>
+          <p>Before any campaign changes, especially anything on this transition plan, you'll hear from us first with enough lead time to brief your sales team.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="icon">💬</div>
+        <div class="item-content">
+          <h3>ChatGPT Ads: Revised Deck Coming</h3>
+          <p>We'll send over a revised deck async with real answers on beta status, pricing, timing, and tracking.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>This Week</h2>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="label">Today</div>
+          <div class="content">Budget docs updated</div>
+        </div>
+        <div class="timeline-item">
+          <div class="label">Next Week</div>
+          <div class="content">First call in new format</div>
+        </div>
+        <div class="timeline-item">
+          <div class="label">Async</div>
+          <div class="content">ChatGPT Ads revised deck</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <p style="margin-bottom: 0;">We know trust is earned through consistent execution, not promises. We're committed to this partnership and to showing up the way you need us to.</p>
+    </div>
+
+    <div class="footer">
+      Single Grain Paid Media Team
+    </div>
+  </div>
+</body>
+</html>

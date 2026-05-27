@@ -1,141 +1,185 @@
-const { google } = require('googleapis');
+// Dashboard API endpoint - transforms dashboard input to HubSpot format and calls hubspot-webhook
+// Handles file uploads for supplementary documents (SOW, decks, proposals)
+const hubspotHandler = require('./hubspot-webhook');
+const formidable = require('formidable');
+const fs = require('fs');
+const path = require('path');
 
-const SPREADSHEET_ID = '1SMGQKvizFBUkWce3yGGFzHYYz913-tjPh1kHtmCAPEA';
-const SLACK_WEBHOOK = process.env.SLACK_WEBHOOK_URL;
-
-function getAuth() {
-  const creds = JSON.parse(process.env.GOOGLE_CREDENTIALS || '{}');
-  return new google.auth.GoogleAuth({ credentials: creds, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
+// File parsers
+let pdfParse, mammoth, XLSX;
+try {
+  pdfParse = require('pdf-parse');
+  mammoth = require('mammoth');
+  XLSX = require('xlsx');
+} catch (e) {
+  console.log('File parsing libraries not fully loaded:', e.message);
 }
 
-function getWeekDates(kickoffDate) {
-  const dates = [];
-  const start = new Date(kickoffDate);
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + (i * 7));
-    dates.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+// Disable body parsing for this route (needed for formidable)
+module.exports.config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+// Parse multipart form data
+async function parseForm(req) {
+  return new Promise((resolve, reject) => {
+    const form = formidable({
+      maxFileSize: 10 * 1024 * 1024, // 10MB max
+      maxFiles: 5,
+      keepExtensions: true,
+    });
+
+    form.parse(req, (err, fields, files) => {
+      if (err) reject(err);
+      else resolve({ fields, files });
+    });
+  });
+}
+
+// Extract text from uploaded file
+async function extractFileText(file) {
+  const filepath = file.filepath || file.path;
+  const filename = file.originalFilename || file.name || 'unknown';
+  const ext = path.extname(filename).toLowerCase();
+
+  try {
+    const buffer = fs.readFileSync(filepath);
+
+    switch (ext) {
+      case '.pdf':
+        if (pdfParse) {
+          const pdfData = await pdfParse(buffer);
+          return { filename, text: pdfData.text, type: 'PDF' };
+        }
+        break;
+
+      case '.docx':
+      case '.doc':
+        if (mammoth) {
+          const result = await mammoth.extractRawText({ buffer });
+          return { filename, text: result.value, type: 'Word Document' };
+        }
+        break;
+
+      case '.xlsx':
+      case '.xls':
+        if (XLSX) {
+          const workbook = XLSX.read(buffer, { type: 'buffer' });
+          let text = '';
+          for (const sheetName of workbook.SheetNames) {
+            const sheet = workbook.Sheets[sheetName];
+            text += `--- ${sheetName} ---\n`;
+            text += XLSX.utils.sheet_to_csv(sheet) + '\n\n';
+          }
+          return { filename, text, type: 'Excel Spreadsheet' };
+        }
+        break;
+
+      case '.pptx':
+      case '.ppt':
+        // For PowerPoint, we'd need a different library
+        // For now, return a note that we received it
+        return { filename, text: '[PowerPoint file received - manual review recommended]', type: 'PowerPoint' };
+
+      default:
+        // Try to read as plain text
+        return { filename, text: buffer.toString('utf8').slice(0, 50000), type: 'Text' };
+    }
+  } catch (e) {
+    console.error(`Error parsing file ${filename}:`, e.message);
+    return { filename, text: `[Error reading file: ${e.message}]`, type: 'Error' };
   }
-  return dates;
-}
 
-async function sendSlack(salesData, url) {
-  if (!SLACK_WEBHOOK) return;
-  await fetch(SLACK_WEBHOOK, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      blocks: [
-        { type: "header", text: { type: "plain_text", text: "New Client Onboarding!", emoji: true } },
-        { type: "section", fields: [
-          { type: "mrkdwn", text: "*Client:*\n" + salesData.client_name },
-          { type: "mrkdwn", text: "*Budget:*\n$" + salesData.monthly_budget.toLocaleString() + "/mo" },
-          { type: "mrkdwn", text: "*Owner:*\n" + salesData.assigned_owner },
-          { type: "mrkdwn", text: "*Kickoff:*\n" + salesData.kickoff_date }
-        ]},
-        { type: "section", text: { type: "mrkdwn", text: "<" + url + "|View Sheet>" }}
-      ]
-    })
-  }).catch(() => {});
+  return { filename, text: '[File type not supported for text extraction]', type: 'Unknown' };
 }
 
 module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   try {
-    const salesData = req.body;
-    const sheets = google.sheets({ version: 'v4', auth: getAuth() });
-    const weekDates = getWeekDates(salesData.kickoff_date);
-    const owner = salesData.assigned_owner;
-    const clientTab = salesData.client_name;
-    const accessTab = clientTab + ' - Access';
+    // Parse multipart form data
+    const { fields, files } = await parseForm(req);
 
-    // Create tabs
+    console.log('Received form fields:', Object.keys(fields));
+    console.log('Received files:', files.files ? (Array.isArray(files.files) ? files.files.length : 1) : 0);
+
+    // Extract field values (formidable v3 returns arrays)
+    const getValue = (field) => Array.isArray(field) ? field[0] : field;
+
+    const clientName = getValue(fields.client_name);
+    const industry = getValue(fields.industry);
+    const monthlyBudget = getValue(fields.monthly_budget);
+    const kickoffDate = getValue(fields.kickoff_date);
+    const assignedOwner = getValue(fields.assigned_owner);
+    const contactEmail = getValue(fields.contact_email);
+
+    // Parse services array
+    let services;
     try {
-      await sheets.spreadsheets.batchUpdate({
-        spreadsheetId: SPREADSHEET_ID,
-        requestBody: { requests: [
-          { addSheet: { properties: { title: clientTab, index: 0 } } },
-          { addSheet: { properties: { title: accessTab, index: 1 } } }
-        ]}
-      });
-    } catch (e) {}
-
-    // Gantt data
-    const gantt = [
-      ['Category', 'Task', 'Owner', 'Assigned To', 'W1\n'+weekDates[0], 'W2\n'+weekDates[1], 'W3\n'+weekDates[2], 'W4\n'+weekDates[3], 'W5\n'+weekDates[4], 'W6\n'+weekDates[5], 'W7\n'+weekDates[6], 'W8\n'+weekDates[7], 'W9\n'+weekDates[8], 'W10\n'+weekDates[9], 'W11\n'+weekDates[10], 'W12\n'+weekDates[11]],
-      ['CLIENT: '+salesData.client_name, 'Budget: $'+salesData.monthly_budget.toLocaleString()+'/mo', salesData.industry||'', owner, '', '', '', '', '', '', '', '', '', '', '', ''],
-      ['ACCESS & SETUP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Request platform access', 'SG', owner, 'X', '', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Client grants access', 'Client', 'Client', 'X', '', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Verify all access confirmed', 'SG', owner, '', 'X', '', '', '', '', '', '', '', '', '', ''],
-      ['TRACKING & ANALYTICS', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Audit existing tracking', 'SG', owner, 'X', '', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Implement GTM container', 'SG', owner, '', 'X', 'X', '', '', '', '', '', '', '', '', ''],
-      ['', 'Set up conversion actions', 'SG', owner, '', 'X', 'X', '', '', '', '', '', '', '', '', ''],
-      ['STRATEGY & PLANNING', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Kickoff call', 'Both', 'Both', 'M', '', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Competitor research', 'SG', owner, 'X', 'X', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Define KPIs and targets', 'Both', 'Both', '', 'X', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Strategy presentation', 'Both', 'Both', '', '', 'M', '', '', '', '', '', '', '', '', ''],
-      ['CAMPAIGN BUILD', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Build Google campaigns', 'SG', owner, '', '', 'X', 'X', '', '', '', '', '', '', '', ''],
-      ['', 'Build Meta campaigns', 'SG', owner, '', '', 'X', 'X', '', '', '', '', '', '', '', ''],
-      ['', 'Write ad copy', 'SG', owner, '', '', 'X', 'X', '', '', '', '', '', '', '', ''],
-      ['', 'QA all campaigns', 'SG', owner, '', '', '', 'X', '', '', '', '', '', '', '', ''],
-      ['LAUNCH & OPTIMIZATION', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Launch campaigns', 'SG', owner, '', '', '', '', 'M', '', '', '', '', '', '', ''],
-      ['', 'Week 1 performance review', 'Both', 'Both', '', '', '', '', '', 'X', '', '', '', '', '', ''],
-      ['', 'Ongoing optimization', 'SG', owner, '', '', '', '', '', 'X', 'X', 'X', 'X', 'X', 'X', 'X'],
-      ['REPORTING', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-      ['', 'Weekly status calls', 'Both', 'Both', '', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M'],
-      ['', '90-day review', 'Both', 'Both', '', '', '', '', '', '', '', '', '', '', '', 'M'],
-    ];
-
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SPREADSHEET_ID, range: "'" + clientTab + "'!A1",
-      valueInputOption: 'RAW', requestBody: { values: gantt }
-    });
-
-    // Access checklist
-    const access = [
-      ['Platform', 'Email/ID', 'Access Level', 'Team', 'Status', 'Date Requested', 'Date Confirmed', 'Notes'],
-      ['Google Analytics 4', 'analytics@singlegrain.com', 'Editor', 'All', 'Pending', '', '', ''],
-      ['Google Tag Manager', 'analytics@singlegrain.com', 'Admin', 'All', 'Pending', '', '', ''],
-      ['Google Ads', 'adwords@singlegrain.com', 'Admin', 'Paid Media', 'Pending', '', '', ''],
-      ['Meta Ads', 'Partner ID: 10152546861047072', 'Full Control', 'Paid Media', 'Pending', '', '', ''],
-      ['LinkedIn Ads', 'Partner ID: 7186746961612406786', 'Admin', 'Paid Media', 'Pending', '', '', ''],
-      ['Microsoft Ads', 'adwords@singlegrain.com', 'Super Admin', 'Paid Media', 'Pending', '', '', ''],
-      ['TikTok Ads', 'BC ID: 6998239304547909634', 'Admin', 'Paid Media', 'Pending', '', '', ''],
-      ['CRM', 'adwords@singlegrain.com', 'Varies', 'All', 'Pending', '', '', ''],
-    ];
-
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SPREADSHEET_ID, range: "'" + accessTab + "'!A1",
-      valueInputOption: 'RAW', requestBody: { values: access }
-    });
-
-    // Get sheet ID
-    const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
-    const sheet = meta.data.sheets.find(s => s.properties.title === clientTab);
-    const sheetId = sheet ? sheet.properties.sheetId : 0;
-
-    // Format
-    if (sheet) {
-      await sheets.spreadsheets.batchUpdate({
-        spreadsheetId: SPREADSHEET_ID,
-        requestBody: { requests: [
-          { repeatCell: { range: { sheetId, startRowIndex: 0, endRowIndex: 1 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.3, blue: 0.5 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } },
-          { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 }, properties: { pixelSize: 280 }, fields: 'pixelSize' } },
-        ]}
-      });
+      services = JSON.parse(getValue(fields.services));
+    } catch (e) {
+      services = ['paid_media'];
     }
 
-    const url = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/edit#gid=' + sheetId;
-    await sendSlack(salesData, url);
-    
-    return res.status(200).json({ success: true, spreadsheet_url: url });
+    // Process uploaded files
+    let supplementaryContent = '';
+    const uploadedFiles = files.files || [];
+    const fileArray = Array.isArray(uploadedFiles) ? uploadedFiles : [uploadedFiles];
+
+    if (fileArray.length > 0 && fileArray[0]) {
+      console.log(`Processing ${fileArray.length} uploaded files...`);
+
+      const extractedDocs = [];
+      for (const file of fileArray) {
+        if (file && file.filepath) {
+          const extracted = await extractFileText(file);
+          extractedDocs.push(extracted);
+          console.log(`Extracted ${extracted.text.length} chars from ${extracted.filename} (${extracted.type})`);
+        }
+      }
+
+      if (extractedDocs.length > 0) {
+        supplementaryContent = extractedDocs.map(doc =>
+          `=== ${doc.filename} (${doc.type}) ===\n${doc.text}`
+        ).join('\n\n');
+      }
+    }
+
+    // Transform dashboard format to HubSpot-like format
+    const transformedBody = {
+      properties: {
+        dealname: clientName,
+        amount: monthlyBudget,
+        industry: industry || '',
+        services: Array.isArray(services) ? services.join(', ') : (services || 'paid_media'),
+        hubspot_owner_id: assignedOwner || 'default',
+        closedate: kickoffDate || new Date().toISOString()
+      },
+      // Include supplementary content for roadmap customization
+      supplementary_documents: supplementaryContent || null
+    };
+
+    console.log('Transformed body:', JSON.stringify({
+      ...transformedBody,
+      supplementary_documents: supplementaryContent ? `[${supplementaryContent.length} chars]` : null
+    }));
+
+    // Create mock request with transformed body
+    const mockReq = {
+      method: 'POST',
+      body: transformedBody,
+      headers: { 'content-type': 'application/json' }
+    };
+
+    // Pass through to hubspot-webhook handler
+    return await hubspotHandler(mockReq, res);
+
   } catch (err) {
+    console.error('Generate API error:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 };
